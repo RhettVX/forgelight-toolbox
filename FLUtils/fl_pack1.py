@@ -16,6 +16,10 @@ def unpack_pack1(path: str, dir_: str) -> None:
     :return: None
     """
 
+    # TODO: Add namelist support
+    # with open('namelist.txt', 'r') as in_file:
+    #     namelist = [line.strip() for line in in_file]
+
     am = AssetManager([path])
     print(f'Unpacking "{basename(path)}"...')
 
