@@ -28,7 +28,8 @@ def unpack_pack1(path: str, dir_: str) -> None:
 
         makedirs(join(dir_, pack_name), exist_ok=True)
 
-        with open(join(dir_, pack_name, asset.name), 'wb') as out_file:
+        name = asset.name if asset.name else f'{asset.name_hash:016x}.bin'
+        with open(join(dir_, pack_name, name), 'wb') as out_file:
             out_file.write(asset.data)
 
     print('Done\n')
