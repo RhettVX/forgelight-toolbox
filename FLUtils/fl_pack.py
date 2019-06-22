@@ -8,10 +8,10 @@ from DbgPack import AssetManager
 # TODO: Method to pack a dir into a .pack
 
 
-def unpack_pack1(path: str, dir_: str) -> None:
-    """Unpacks a '.pack' file used by the Forgelight Engine
+def unpack_pack(path: str, dir_: str) -> None:
+    """Unpacks a '.pack|.pack2' file used by the Forgelight Engine
 
-    :param path: Path to '.pack' file
+    :param path: Path to '.pack|.pack2' or  file
     :param dir_: Path to directory to unpack files to
     :return: None
     """
@@ -49,4 +49,4 @@ if __name__ == '__main__':
 
         else:  # arg is a file
             print(arg)
-            unpack_pack1(arg, 'Unpacked')
+            unpack_pack(arg, 'Unpacked')
