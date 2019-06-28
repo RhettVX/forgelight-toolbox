@@ -16,9 +16,11 @@ def unpack_pack(path: str, dir_: str) -> None:
     :return: None
     """
 
-    # TODO: Make this optional
+    # FIXME: Make this optional. Don't push until fixed
     with open('namelist.txt', 'r') as in_file:
         namelist = [line.strip() for line in in_file]
+
+    # namelist = None  # FIXME
 
     am = AssetManager([path], namelist=namelist)
     print(f'Unpacking "{basename(path)}"...')
@@ -35,6 +37,13 @@ def unpack_pack(path: str, dir_: str) -> None:
     print('Done\n')
 
 
+def pack_dir(path: str) -> None:
+    pass
+
+# USAGE: python fl_pack.py [-f --format pack|pack2(Default)] file [files...]
+# Pack when a folder is passed
+# Unpack when a pack|pack2 file is passed
+# Default to pack2 packing
 if __name__ == '__main__':
     argc = len(argv)
 
