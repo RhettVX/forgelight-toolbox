@@ -10,4 +10,4 @@ def test_unpack_pack2_namelist():
 
 
 def test_unpack_pack2():
-    fl_pack.unpack_pack('data_x64_0_without_namelist.pack2', 'Unpacked')
+    fl_pack.unpack_pack('data_x64_0_without_namelist.pack2', 'Unpacked', 'namelist.txt')

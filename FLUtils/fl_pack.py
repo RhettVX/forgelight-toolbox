@@ -1,4 +1,4 @@
-from sys import argv, stderr
+from argparse import ArgumentParser
 from os import makedirs
 from os.path import splitext, basename, join, isdir
 
@@ -8,21 +8,22 @@ from DbgPack import AssetManager
 # TODO: Method to pack a dir into a .pack
 
 
-def unpack_pack(path: str, dir_: str) -> None:
+def unpack_pack(path: str, dir_: str, namelist: str = None) -> None:
     """Unpacks a '.pack|.pack2' file used by the Forgelight Engine
 
     :param path: Path to '.pack|.pack2' or  file
     :param dir_: Path to directory to unpack files to
+    :param namelist: Path to filename list
     :return: None
     """
 
-    # FIXME: Make this optional. Don't push until fixed
-    with open('namelist.txt', 'r') as in_file:
-        namelist = [line.strip() for line in in_file]
+    namelist_ = []
 
-    # namelist = None  # FIXME
+    if namelist:
+        with open(namelist, 'r') as in_file:
+            namelist_ = [line.strip() for line in in_file]
 
-    am = AssetManager([path], namelist=namelist)
+    am = AssetManager([path], namelist=namelist_)
     print(f'Unpacking "{basename(path)}"...')
 
     for asset in am:
@@ -30,32 +31,24 @@ def unpack_pack(path: str, dir_: str) -> None:
 
         makedirs(join(dir_, pack_name), exist_ok=True)
 
-        name = asset.name if asset.name else f'{asset.name_hash:016x}.bin'
+        name = asset.name if asset.name else f'{asset.name_hash:#018x}.bin'
         with open(join(dir_, pack_name, name), 'wb') as out_file:
             out_file.write(asset.data)
 
     print('Done\n')
 
 
-def pack_dir(path: str) -> None:
-    pass
-
-# USAGE: python fl_pack.py [-f --format pack|pack2(Default)] file [files...]
-# Pack when a folder is passed
-# Unpack when a pack|pack2 file is passed
-# Default to pack2 packing
 if __name__ == '__main__':
-    argc = len(argv)
+    parser = ArgumentParser(description='Unpacks a \'.pack|.pack2\' file used by the Forgelight Engine')
+    parser.add_argument('-p1', '--pack1', action='store_true', help='use pack1 (.pack) format')
+    parser.add_argument('-n', '--namelist', help='path to external namelist')
+    parser.add_argument('file', nargs='+', help='files or folders to unpack or pack')
 
-    if argc < 2:
-        print('Missing arguments', file=stderr)
-        exit(1)
+    args = parser.parse_args()
 
-    for arg in argv[1:]:
-        if isdir(arg):
-            # TODO: Pack dir
-            pass
-
-        else:  # arg is a file
-            print(arg)
-            unpack_pack(arg, 'Unpacked')
+    for path_ in args.file:
+        if isdir(path_):
+            # TODO: Pack directory
+            raise NotImplementedError
+        else:
+            unpack_pack(path_, 'Unpacked', args.namelist)
