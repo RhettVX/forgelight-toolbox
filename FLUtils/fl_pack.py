@@ -9,7 +9,8 @@ from DbgPack import AssetManager
 
 
 def unpack_pack(path: str, dir_: str, namelist: str = None) -> None:
-    """Unpacks a '.pack|.pack2' file used by the Forgelight Engine
+    """
+    Unpacks a '.pack|.pack2' file used by the Forgelight Engine
 
     :param path: Path to '.pack|.pack2' or  file
     :param dir_: Path to directory to unpack files to
