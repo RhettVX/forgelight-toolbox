@@ -5,9 +5,32 @@ from os import makedirs, walk
 from pathlib import Path
 from typing import List
 
+import dataclasses
+
 from DbgPack import AssetManager
 
+# TODO: Add method for comparison
+# TODO: Use dataclasses for storing indices
+
 Entry = namedtuple('Entry', 'name name_hash crc32 path')
+
+
+def compare_dumps(path_old: str, path_new: str) -> None:
+    """
+    Compare to index dumps and create a difference report
+
+    :param path_old: Path to older index dump
+    :param path_new:  Path to newer index dump
+    :return: None
+    """
+
+    # Load old index
+    with open(path_old, 'r') as file_old:
+        index_old = [Entry(*l.strip().split(';')) for l in file_old]
+
+    # Load new index
+    with open(path_new, 'r') as file_new:
+        index_new = [Entry(*l.strip().split(';')) for l in file_new]
 
 
 def load_files(path: str, namelist: str = None) -> List[Entry]:
