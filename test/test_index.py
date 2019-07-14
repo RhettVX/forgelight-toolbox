@@ -1,5 +1,6 @@
 from FLUtils.fl_index import compare_dumps
+from pathlib import Path
 
 
 def test_compare_dumps():
-    compare_dumps('old_index_dump.txt', 'new_index_dump.txt')
+    compare_dumps(Path('old_index.txt').resolve(), Path('new_index.txt').resolve())

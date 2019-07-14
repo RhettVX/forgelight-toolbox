@@ -12,7 +12,7 @@ from DbgPack.hash import crc64
 # TODO: Pack everything into the index class
 
 
-@dataclass
+@dataclass()
 class IndexEntry:
     name: str = field(default='')
     name_hash: str = field(default=None)
@@ -23,6 +23,9 @@ class IndexEntry:
     def __post_init__(self):
         assert self.name or self.name_hash, 'name or name_hash is required'
         assert self.path, 'these arguments are required'
+
+        if self.name == 'NONE':
+            self.name = ''
 
         if not self.name_hash and self.name:
             self.name_hash = crc64(self.name)
@@ -47,9 +50,12 @@ class Index:
     def __iter__(self):
         return iter(self.entries.values())
 
+    def __getitem__(self, item):
+        return self.entries[item]
 
-# TODO: Restore functionality to this function
-def compare_dumps(path_old, path_new: str) -> None:
+
+# FIXME: This is broken
+def compare_dumps(path_old: Path, path_new: Path) -> None:
     """
     Compare to index dumps and create a difference report
 
@@ -57,7 +63,23 @@ def compare_dumps(path_old, path_new: str) -> None:
     :param path_new:  Path to newer index dump
     :return: None
     """
-    pass
+
+    # Load indices
+    index_old = Index()
+    for line in [l.strip() for l in path_old.read_text().split('\n')]:
+        if line:
+            index_old.add(IndexEntry(*line.split(';')))
+
+    index_new = Index()
+    for line in [l.strip() for l in path_new.read_text().split('\n')]:
+        if line:
+            index_new.add(IndexEntry(*line.split(';')))
+
+    # Should be new files
+    with open('debug.txt', 'w') as out_file:
+        for x in index_new.entries.keys():
+            if x not in index_old.entries.keys():
+                out_file.write(str(index_new[x])+'\n')
 
 
 def load_files(path: Path, namelist: Optional[Path] = None) -> Index:
@@ -65,7 +87,7 @@ def load_files(path: Path, namelist: Optional[Path] = None) -> Index:
 
     :param path: Path of root dir to index
     :param namelist: Path to external namelist
-    :return: Set[IndexEntry]
+    :return: Index
     """
     index = Index()
     packs: List[Tuple] = []
