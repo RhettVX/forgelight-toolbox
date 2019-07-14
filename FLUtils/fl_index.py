@@ -85,9 +85,6 @@ def load_files(path: Path, namelist: Optional[Path] = None) -> Index:
                 e = IndexEntry(name=file, path=path, subpath=subpath)
                 index.add(e)
 
-    for i in index:
-        print(i)
-
     if packs:
         print('Indexing packs...')
 
