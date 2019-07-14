@@ -1,12 +1,15 @@
+import os
 from argparse import ArgumentParser
 from binascii import crc32
-import os
-from pathlib import Path
-from typing import List, Set, Any, Union, AnyStr, Optional, Dict, Tuple
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import List, Optional, Dict, Tuple
 
 from DbgPack import AssetManager
 from DbgPack.hash import crc64
+
+
+# TODO: Pack everything into the index class
 
 
 @dataclass
@@ -15,7 +18,7 @@ class IndexEntry:
     name_hash: str = field(default=None)
     crc32_: Optional[int] = field(default=None)
     path: Path = field(default=None)
-    subpath: Path = field(default_factory=Path)
+    subpath: Optional[Path] = field(default_factory=Path)
 
     def __post_init__(self):
         assert self.name or self.name_hash, 'name or name_hash is required'
@@ -26,7 +29,7 @@ class IndexEntry:
 
         # If subpath is a file, then we are probably in a pack
         # TODO: and empty files will have a crc32 of 0, so we don't want to regenerate that
-        if not self.crc32_ and self.name and self.path and self.subpath.is_dir():
+        if not self.crc32_ and self.name and self.path and (self.path / self.subpath).is_dir():
             self.crc32_ = crc32((self.path / self.subpath / self.name).read_bytes())
 
 
@@ -41,6 +44,7 @@ class Index:
         return iter(self.entries.values())
 
 
+# TODO: Restore functionality to this function
 def compare_dumps(path_old, path_new: str) -> None:
     """
     Compare to index dumps and create a difference report
@@ -52,7 +56,7 @@ def compare_dumps(path_old, path_new: str) -> None:
     pass
 
 
-def load_files(path: Path, namelist: Path = None) -> Index:
+def load_files(path: Path, namelist: Optional[Path] = None) -> Index:
     """
 
     :param path: Path of root dir to index
@@ -61,12 +65,17 @@ def load_files(path: Path, namelist: Path = None) -> Index:
     """
     index = Index()
     packs: List[Tuple] = []
+    namelist_ = []
+
+    if namelist:
+        print('Loading namelist')
+        namelist_ = [line.strip() for line in namelist.read_text().split('\n')]
 
     print(f'Indexing {path}...')
-    path_len = len(str(path))+1
+    path_len = len(str(path))
     for root, _, files in os.walk(path):
         for file in files:
-            subpath = Path(root[path_len:])
+            subpath = Path(root[path_len:].lstrip(os.sep))
             fullpath = path / subpath / file
 
             if fullpath.suffix in ('.pack', '.pack2'):
@@ -82,7 +91,7 @@ def load_files(path: Path, namelist: Path = None) -> Index:
     if packs:
         print('Indexing packs...')
 
-        am = AssetManager([str(Path(*p)) for p in packs])
+        am = AssetManager([str(Path(*p)) for p in packs], namelist=namelist_)
         for a in am:
             e = IndexEntry(name=a.name, name_hash=a.name_hash, crc32_=a.crc32,
                            path=Path(a.path[:path_len]), subpath=Path(a.path[path_len:]))
@@ -92,7 +101,7 @@ def load_files(path: Path, namelist: Path = None) -> Index:
     return index
 
 
-def dump_index(index: List[Any], name: str, dir_: str) -> None:
+def dump_index(index: Index, name: str, dir_: str) -> None:
     """
 
     :param index: List of index entries to dump
@@ -100,15 +109,16 @@ def dump_index(index: List[Any], name: str, dir_: str) -> None:
     :param dir_: Directory to store index dump in
     :return: None
     """
-    pass
-    # print('Dumping index...')
-    # makedirs(dir_, exist_ok=True)
-    # file_path = Path(dir_, name)
-    # with open(file_path, 'w') as out_file:
-    #     for entry in index:
-    #         out_file.write(f'{entry.name};{entry.name_hash};{entry.crc32};{entry.path}\n')
-    #
-    # print('Done\n')
+
+    print('Dumping index...')
+    os.makedirs(dir_, exist_ok=True)
+    file_path = Path(dir_, name)
+    with file_path.open('w') as out_file:
+        for entry in index:
+            out_file.write(
+                f'{entry.name if entry.name else "NONE"};{entry.name_hash};{entry.crc32_};{entry.path};{entry.subpath}\n')
+
+    print('Done\n')
 
 
 if __name__ == '__main__':
@@ -119,6 +129,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     for path_ in args.dir:
-        load_files(Path(path_), Path(args.namelist))
-        # arg_path = Path(path_)
-        # dump_index(load_files(arg_path, args.namelist), arg_path.name+'.txt', 'Game Indices')
+        file_path = Path(path_)
+        dump_index(load_files(file_path, Path(args.namelist)), file_path.name + '.txt', 'Game Indices')
