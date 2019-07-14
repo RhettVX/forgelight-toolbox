@@ -28,9 +28,13 @@ class IndexEntry:
             self.name_hash = crc64(self.name)
 
         # If subpath is a file, then we are probably in a pack
-        # TODO: and empty files will have a crc32 of 0, so we don't want to regenerate that
         if not self.crc32_ and self.name and self.path and (self.path / self.subpath).is_dir():
-            self.crc32_ = crc32((self.path / self.subpath / self.name).read_bytes())
+            fullpath = self.path / self.subpath / self.name
+
+            if fullpath.stat().st_size > 0:
+                self.crc32_ = crc32(fullpath.read_bytes())
+            else:
+                self.crc32_ = 0
 
 
 @dataclass
