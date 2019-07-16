@@ -10,6 +10,7 @@ from DbgPack.hash import crc64
 
 
 # TODO: Pack everything into the index class
+# TODO: Handle identical file names properly
 
 
 @dataclass()
@@ -45,7 +46,7 @@ class Index:
     entries: Dict[int, IndexEntry] = field(default_factory=dict)
 
     def add(self, item):
-        self.entries[hash((item.name_hash, item.subpath))] = item
+        self.entries[item.name_hash] = item
 
     def __iter__(self):
         return iter(self.entries.values())
@@ -54,7 +55,7 @@ class Index:
         return self.entries[item]
 
 
-# FIXME: This is broken
+# TODO: Still unfinished
 def compare_dumps(path_old: Path, path_new: Path) -> None:
     """
     Compare to index dumps and create a difference report
