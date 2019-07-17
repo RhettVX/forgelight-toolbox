@@ -82,10 +82,13 @@ def compare_dumps(path_old: Path, path_new: Path, out_dir: Path) -> None:
             index_new.add(IndexEntry(*line.split(';')))
 
     # Identify file changes
-    files_new = [index_new[x] for x in index_new.entries.keys() if x not in index_old.entries.keys()]
-    files_del = [index_old[x] for x in index_old.entries.keys() if x not in index_new.entries.keys()]
-    files_mod = [index_new[x] for x in index_new.entries.keys()
-                 if x in index_old.entries.keys() and index_new[x].crc32_ != index_old[x].crc32_]
+    files_new = sorted([index_new[x] for x in index_new.entries.keys() if x not in index_old.entries.keys()],
+                       key=lambda x: x.name)
+    files_del = sorted([index_old[x] for x in index_old.entries.keys() if x not in index_new.entries.keys()],
+                       key=lambda x: x.name)
+    files_mod = sorted([index_new[x] for x in index_new.entries.keys()
+                       if x in index_old.entries.keys() and index_new[x].crc32_ != index_old[x].crc32_],
+                       key=lambda x: x.name)
 
     with open(out_dir / f'diff-{path_old.stem}-{path_new.stem}.txt', 'w') as out_file:
         out_file.write(f'Diff report:\n"{path_old}"\nand\n"{path_new}"')
