@@ -9,6 +9,7 @@ from DbgPack import AssetManager
 from DbgPack.hash import crc64
 
 
+# TODO: Load in old indices with the newest namelist
 # TODO: Pack everything into the index class
 # TODO: Handle identical file names properly
 
@@ -55,15 +56,19 @@ class Index:
         return self.entries[item]
 
 
-# TODO: Still unfinished
-def compare_dumps(path_old: Path, path_new: Path) -> None:
+def compare_dumps(path_old: Path, path_new: Path, out_dir: Path) -> None:
     """
     Compare to index dumps and create a difference report
 
     :param path_old: Path to older index dump
-    :param path_new:  Path to newer index dump
+    :param path_new: Path to newer index dump
+    :param out_dir: Name of folder to output report to
     :return: None
     """
+
+    print('Creating diff report...')
+
+    os.makedirs(out_dir, exist_ok=True)
 
     # Load indices
     index_old = Index()
@@ -76,11 +81,28 @@ def compare_dumps(path_old: Path, path_new: Path) -> None:
         if line:
             index_new.add(IndexEntry(*line.split(';')))
 
-    # Should be new files
-    with open('debug.txt', 'w') as out_file:
-        for x in index_new.entries.keys():
-            if x not in index_old.entries.keys():
-                out_file.write(str(index_new[x])+'\n')
+    # Identify file changes
+    files_new = [index_new[x] for x in index_new.entries.keys() if x not in index_old.entries.keys()]
+    files_del = [index_old[x] for x in index_old.entries.keys() if x not in index_new.entries.keys()]
+    files_mod = [index_new[x] for x in index_new.entries.keys()
+                 if x in index_old.entries.keys() and index_new[x].crc32_ != index_old[x].crc32_]
+
+    with open(out_dir / f'diff-{path_old.stem}-{path_new.stem}.txt', 'w') as out_file:
+        out_file.write(f'Diff report:\n"{path_old}"\nand\n"{path_new}"')
+
+        out_file.write(f'\n\n\n{"###[ ADDED ]":#<80}')
+        out_file.writelines([f'\n+ "{x.name if x.name else "NONE"}" : {int(x.name_hash):#018x} : "{x.subpath}"'
+                             for x in files_new])
+
+        out_file.write(f'\n\n\n{"###[ DELETED ]":#<80}')
+        out_file.writelines([f'\n- "{x.name if x.name else "NONE"}" : {int(x.name_hash):#018x} : "{x.subpath}"'
+                             for x in files_del])
+
+        out_file.write(f'\n\n\n{"###[ CHANGED ]":#<80}')
+        out_file.writelines([f'\n! "{x.name if x.name else "NONE"}" : {int(x.name_hash):#018x} : "{x.subpath}"'
+                             for x in files_mod])
+
+    print('Done!')
 
 
 def load_files(path: Path, namelist: Optional[Path] = None) -> Index:
@@ -145,13 +167,25 @@ def dump_index(index: Index, name: str, dir_: str) -> None:
     print('Done\n')
 
 
+# fl_index -n namelist --index[ -n root [root..]] --diff file1 file2
 if __name__ == '__main__':
     parser = ArgumentParser()
+    sub_parsers = parser.add_subparsers(dest='command')
+
     parser.add_argument('-n', '--namelist', help='path to external namelist')
-    parser.add_argument('dir', nargs='+', help='path of root directory to dump index of')
+
+    subcmd_index = sub_parsers.add_parser('index')
+    subcmd_index.add_argument('root', nargs='+', help='path of root directory to dump index of')
+
+    subcmd_diff = sub_parsers.add_parser('diff')
+    subcmd_diff.add_argument('index1', help='Path to older index')
+    subcmd_diff.add_argument('index2', help='Path to newer index')
 
     args = parser.parse_args()
+    if args.command == 'index':
+        for path_ in args.root:
+            file_path = Path(path_)
+            dump_index(load_files(file_path, Path(args.namelist)), file_path.name + '.txt', 'Game Indices')
 
-    for path_ in args.dir:
-        file_path = Path(path_)
-        dump_index(load_files(file_path, Path(args.namelist)), file_path.name + '.txt', 'Game Indices')
+    elif args.command == 'diff':
+        compare_dumps(Path(args.index1), Path(args.index2), Path('Diff Reports'))
