@@ -163,7 +163,7 @@ def dump_index(index: Index, name: str, dir_: str) -> None:
     makedirs(dir_, exist_ok=True)
     file_path = Path(dir_, name)
     with file_path.open('w') as out_file:
-        for entry in index:
+        for entry in sorted(index, key=lambda x: x.name):
             out_file.write(
                 f'{entry.name if entry.name else "NONE"};{entry.name_hash};{entry.crc32_};{entry.path};{entry.subpath}\n')
 

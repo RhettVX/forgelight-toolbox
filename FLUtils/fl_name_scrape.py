@@ -1,7 +1,9 @@
+import operator
 import re
 from pathlib import Path
 from typing import List, Set, Dict
 from os import makedirs
+from os.path import splitext
 
 from DbgPack import AssetManager
 from DbgPack.hash import crc64
@@ -14,37 +16,47 @@ from DbgPack.hash import crc64
 # then update it with the new names
 
 
-known_exts = ('DDS TTF TXT adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 cnk4 cnk5 crc crt cso cur dat db dds'
-              'def dir dll dma dme dmv dsk dx11efb dx11rsb dx11ssb eco exe fsb fxd fxo gfx gnf i64 ini jpg lst lua mrn'
+known_exts = ('DDS TTF TXT adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 cnk4 cnk5 crc crt cso cur dat db dds '
+              'def dir dll dma dme dmv dsk dx11efb dx11rsb dx11ssb eco efb exe fsb fxd fxo gfx gnf i64 ini jpg lst lua mrn '
               'pak pem playerstudio png prsb psd pssb tga thm tome ttf txt vnfo wav xlsx xml xrsb xssb zone').split()
 
 
-def scrape_pack(path: Path) -> Dict[int, str]:
+def scrape_packs(paths: List[Path], namelist: List[str] = None, ext_filter: List[str] = None) -> Dict[int, str]:
     """
 
-    :param path: Path to pack file to scrape
+    :param paths: List of paths to pack files to scrape
     :return: List of scraped names
     """
 
     names = {}
     file_pattern = re.compile(bytes(r'([><\w,-]+\.(' + r'|'.join(known_exts) + r'))', 'utf-8'))
 
-    print(f'Scraping {path.name}...')
-    am = AssetManager([str(path)])
-    for a in am:
-        found_names = []
+    for path in paths:
+        print(f'Scraping {path.name}...')
+        am = AssetManager([str(path)], namelist=namelist)
+        for a in am:
+            if ext_filter:
+                if not splitext(a.name)[1] in ext_filter:
+                    continue
 
-        mo = file_pattern.findall(a.data)
-        if mo:
-            for m in mo:
-                if b'<gender>' in m[0]:
-                    found_names.append(m[0].replace(b'<gender>', b'Male'))
-                    found_names.append(m[0].replace(b'<gender>', b'Female'))
-                else:
-                    found_names.append(m[0])
+            # print(f'Searching in "{a.name}" : {a.name_hash:#018}...')
 
-            for n in found_names:
-                names[crc64(n)] = n.decode('utf-8')
+            found_names = []
+
+            mo = file_pattern.findall(a.data)
+            if mo:
+                for m in mo:
+                    if b'<gender>' in m[0]:
+                        found_names.append(m[0].replace(b'<gender>', b'Male'))
+                        found_names.append(m[0].replace(b'<gender>', b'Female'))
+                    elif b'.efb' in m[0]:
+                        found_names.append(m[0])
+                        found_names.append(m[0].replace(b'.efb', b'.dx11efb'))
+                    else:
+                        found_names.append(m[0])
+
+                for n in found_names:
+                    names[crc64(n)] = n.decode('utf-8')
 
     print('Done!')
     return names
@@ -70,11 +82,18 @@ def write_names(names: Dict[int, str], path: Path, out_dir: Path = Path('.')) ->
 
     makedirs(out_dir, exist_ok=True)
     with path.open('w') as out_file:
-        out_file.writelines([x+'\n' for x in names.values()])
+        out_file.writelines([x+'\n' for x in sorted(names.values())])
 
 
 if __name__ == '__main__':
-    x = scrape_pack(
-        Path(r'C:\Users\Rhett\Desktop\forgelight-toolbox\Backups\07-15-19-TEST\Resources\Assets\data_x64_0.pack2'))
-    write_names(x, Path('scraped.txt'))
+    root = Path(r'C:\Users\Rhett\Desktop\forgelight-toolbox\Backups\07-15-19-TEST\Resources\Assets')
+    data_names = scrape_packs([root / 'data_x64_0.pack2'])
+    # write_names(data_names, Path('scraped.txt'))
+    all_names = scrape_packs(list(root.glob('*.pack2')), namelist=list(data_names.values()),
+                             ext_filter=['.adr', '.agr', '.eco', '.fxd'])
+    write_names({**data_names, **all_names}, Path('scraped-more.txt'))
+
+    print(len(data_names))
+    print(len(all_names))
+
     pass
