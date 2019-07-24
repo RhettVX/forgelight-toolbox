@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import List, Set, Dict
 from os import makedirs
 from os.path import splitext
+from zlib import decompress
+from struct import unpack
 
 from DbgPack import AssetManager
 from DbgPack.hash import crc64
@@ -21,6 +23,15 @@ known_exts = ('DDS TTF TXT adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 c
               'pak pem playerstudio png prsb psd pssb tga thm tome ttf txt vnfo wav xlsx xml xrsb xssb zone').split()
 
 
+def read_cstring(data: bytes) -> bytes:
+    chars = []
+    for c in data:
+        print(c)
+        if c == 0x0:
+            return bytes(chars)
+        chars.append(c)
+
+
 def scrape_packs(paths: List[Path], namelist: List[str] = None, ext_filter: List[str] = None) -> Dict[int, str]:
     """
 
@@ -31,27 +42,61 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, ext_filter: List
     names = {}
     file_pattern = re.compile(bytes(r'([><\w,-]+\.(' + r'|'.join(known_exts) + r'))', 'utf-8'))
 
+    log_path = Path('log-out.txt')
+
+    # with log_path.open('a') as log_file:
+
     for path in paths:
         print(f'Scraping {path.name}...')
         am = AssetManager([str(path)], namelist=namelist)
         for a in am:
             if ext_filter:
-                if not splitext(a.name)[1] in ext_filter:
+                if a.name and not splitext(a.name)[1] in ext_filter:
                     continue
 
-            # print(f'Searching in "{a.name}" : {a.name_hash:#018}...')
+            # log_file.write(f'\n### Searching in "{a.name}" : {a.name_hash:#018}...\n')
+
+            data = a.data
+            # If no name, check file header. If no match, skip this file
+            if not a.name and a.length != 0:
+                print(data[:4])
+                if data[:1] == b'#':  # flatfile
+                    print('In a flatfile')
+
+                elif data[:14] == b'<ActorRuntime>':  # adr
+                    print('In adr')
+                elif data[:4] == b'DMAT':  # dma
+                    print('In dma')
+                elif data[:4] == b'DMOD':  # dme
+                    print('in dme')
+                elif data[:4] == b'FSB5':  # fsb
+                    print('in fsb')
+                    header_size = unpack('<I', data[12:16])[0]
+                    # name_size = unpack('<I', data[16:20])[0]-8
+                    pos = 64+header_size
+                    name = read_cstring(data[pos:])+b'.fsb'
+
+                    names[crc64(name)] = name.decode('utf-8')
+                    continue
+
+                else:
+                    continue
 
             found_names = []
 
-            mo = file_pattern.findall(a.data)
+            mo = file_pattern.findall(data)
             if mo:
                 for m in mo:
+                    # log_file.write('- "' + m[0].decode('utf-8') + '"\n')
                     if b'<gender>' in m[0]:
                         found_names.append(m[0].replace(b'<gender>', b'Male'))
                         found_names.append(m[0].replace(b'<gender>', b'Female'))
                     elif b'.efb' in m[0]:
                         found_names.append(m[0])
-                        found_names.append(m[0].replace(b'.efb', b'.dx11efb'))
+                        found_names.append(m[0].replace(b'.efb', b'.dx11efb'))  # .fxo might also be usable as dx11efb
+                    elif b'<' in m[0] or b'>' in m[0]:
+                        found_names.append(m[0].replace(b'>', b''))
+
                     else:
                         found_names.append(m[0])
 
