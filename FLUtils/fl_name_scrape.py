@@ -26,13 +26,13 @@ known_exts = ('DDS TTF TXT adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 c
 def read_cstring(data: bytes) -> bytes:
     chars = []
     for c in data:
-        print(c)
+        # print(c)
         if c == 0x0:
             return bytes(chars)
         chars.append(c)
 
 
-def scrape_packs(paths: List[Path], namelist: List[str] = None, ext_filter: List[str] = None) -> Dict[int, str]:
+def scrape_packs(paths: List[Path], namelist: List[str] = None) -> Dict[int, str]:
     """
 
     :param paths: List of paths to pack files to scrape
@@ -48,23 +48,24 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, ext_filter: List
 
     for path in paths:
         print(f'Scraping {path.name}...')
-        am = AssetManager([str(path)], namelist=namelist)
+        am = AssetManager([str(path)])
         for a in am:
-            if ext_filter:
-                if a.name and not splitext(a.name)[1] in ext_filter:
-                    continue
 
             # log_file.write(f'\n### Searching in "{a.name}" : {a.name_hash:#018}...\n')
 
             data = a.data
             # If no name, check file header. If no match, skip this file
-            if not a.name and a.length != 0:
-                print(data[:4])
+            if a.length != 0:
                 if data[:1] == b'#':  # flatfile
                     print('In a flatfile')
-
                 elif data[:14] == b'<ActorRuntime>':  # adr
                     print('In adr')
+                elif data[:10] == b'<ActorSet>':  # agr
+                    print('in agr')
+                elif data[:5] == b'<?xml':  # xml
+                    print('in xml')
+                elif data[:12] == b'*TEXTUREPART':  # eco
+                    print('in eco')
                 elif data[:4] == b'DMAT':  # dma
                     print('In dma')
                 elif data[:4] == b'DMOD':  # dme
@@ -72,12 +73,14 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, ext_filter: List
                 elif data[:4] == b'FSB5':  # fsb
                     print('in fsb')
                     header_size = unpack('<I', data[12:16])[0]
-                    # name_size = unpack('<I', data[16:20])[0]-8
                     pos = 64+header_size
                     name = read_cstring(data[pos:])+b'.fsb'
 
                     names[crc64(name)] = name.decode('utf-8')
                     continue
+                elif data[:3] == b'CFX':  # gfx
+                    print('in gfx')
+                    data = decompress(data[8:])
 
                 else:
                     continue
@@ -134,9 +137,8 @@ if __name__ == '__main__':
     root = Path(r'C:\Users\Rhett\Desktop\forgelight-toolbox\Backups\07-15-19-TEST\Resources\Assets')
     data_names = scrape_packs([root / 'data_x64_0.pack2'])
     # write_names(data_names, Path('scraped.txt'))
-    all_names = scrape_packs(list(root.glob('*.pack2')), namelist=list(data_names.values()),
-                             ext_filter=['.adr', '.agr', '.eco', '.fxd'])
-    write_names({**data_names, **all_names}, Path('scraped-more.txt'))
+    all_names = scrape_packs(list(root.glob('*.pack2')))
+    write_names({**all_names, **data_names}, Path('scraped-more.txt'))
 
     print(len(data_names))
     print(len(all_names))
