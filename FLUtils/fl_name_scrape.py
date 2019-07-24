@@ -32,7 +32,7 @@ def read_cstring(data: bytes) -> bytes:
         chars.append(c)
 
 
-def scrape_packs(paths: List[Path], namelist: List[str] = None) -> Dict[int, str]:
+def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True) -> Dict[int, str]:
     """
 
     :param paths: List of paths to pack files to scrape
@@ -40,7 +40,7 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None) -> Dict[int, str
     """
 
     names = {}
-    file_pattern = re.compile(bytes(r'([><\w,-]+\.(' + r'|'.join(known_exts) + r'))', 'utf-8'))
+    file_pattern = re.compile(bytes(r'([><\w-]+\.(' + r'|'.join(known_exts) + r'))', 'utf-8'))
 
     log_path = Path('log-out.txt')
 
@@ -48,18 +48,22 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None) -> Dict[int, str
 
     for path in paths:
         print(f'Scraping {path.name}...')
-        am = AssetManager([str(path)])
+        am = AssetManager([str(path)], namelist=namelist)
         for a in am:
 
             # log_file.write(f'\n### Searching in "{a.name}" : {a.name_hash:#018}...\n')
 
             data = a.data
             # If no name, check file header. If no match, skip this file
-            if a.length != 0:
+            if a.length > 0 and limit_files:
                 if data[:1] == b'#':  # flatfile
                     print('In a flatfile')
                 elif data[:14] == b'<ActorRuntime>':  # adr
                     print('In adr')
+                    mo = re.search(b'<Base fileName="([\\w-]+)\\.dme"', data)
+                    if mo:
+                        name = mo[1]+b'.adr'
+                        names[crc64(name)] = name.decode('utf-8')
                 elif data[:10] == b'<ActorSet>':  # agr
                     print('in agr')
                 elif data[:5] == b'<?xml':  # xml
@@ -135,7 +139,7 @@ def write_names(names: Dict[int, str], path: Path, out_dir: Path = Path('.')) ->
 
 if __name__ == '__main__':
     root = Path(r'C:\Users\Rhett\Desktop\forgelight-toolbox\Backups\07-15-19-TEST\Resources\Assets')
-    data_names = scrape_packs([root / 'data_x64_0.pack2'])
+    data_names = scrape_packs([root / 'data_x64_0.pack2'], limit_files=False)
     # write_names(data_names, Path('scraped.txt'))
     all_names = scrape_packs(list(root.glob('*.pack2')))
     write_names({**all_names, **data_names}, Path('scraped-more.txt'))
