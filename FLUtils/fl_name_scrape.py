@@ -60,7 +60,7 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
                     print('In a flatfile')
                 elif data[:14] == b'<ActorRuntime>':  # adr
                     print('In adr')
-                    mo = re.search(b'<Base fileName="([\\w-]+)\\.dme"', data)
+                    mo = re.search(b'<Base fileName="([\\w-]+)_LOD0\\.dme"', data, re.IGNORECASE)
                     if mo:
                         name = mo[1]+b'.adr'
                         names[crc64(name)] = name.decode('utf-8')
@@ -138,7 +138,7 @@ def write_names(names: Dict[int, str], path: Path, out_dir: Path = Path('.')) ->
 
 
 if __name__ == '__main__':
-    root = Path(r'C:\Users\Rhett\Desktop\forgelight-toolbox\Backups\07-15-19-TEST\Resources\Assets')
+    root = Path(r'C:\Users\Rhett\Desktop\forgelight-toolbox\Backups\07-25-19-LIVE\Resources\Assets')
     data_names = scrape_packs([root / 'data_x64_0.pack2'], limit_files=False)
     # write_names(data_names, Path('scraped.txt'))
     all_names = scrape_packs(list(root.glob('*.pack2')))
