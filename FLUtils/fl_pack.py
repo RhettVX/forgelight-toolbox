@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from os import makedirs
-from os.path import splitext, basename, join, isdir
+from os.path import splitext, basename, join
 
 from DbgPack import AssetManager
 
