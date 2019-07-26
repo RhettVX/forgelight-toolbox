@@ -1,7 +1,7 @@
+import os
 from argparse import ArgumentParser
 from binascii import crc32
 from dataclasses import dataclass, field
-from os import makedirs, walk, sep
 from pathlib import Path
 from typing import List, Optional, Dict, Tuple
 
@@ -68,7 +68,7 @@ def compare_dumps(path_old: Path, path_new: Path, out_dir: Path) -> None:
 
     print('Creating diff report...')
 
-    makedirs(out_dir, exist_ok=True)
+    os.makedirs(out_dir, exist_ok=True)
 
     # Load indices
     index_old = Index()
@@ -87,7 +87,7 @@ def compare_dumps(path_old: Path, path_new: Path, out_dir: Path) -> None:
     files_del = sorted([index_old[x] for x in index_old.entries.keys() if x not in index_new.entries.keys()],
                        key=lambda x: x.name)
     files_mod = sorted([index_new[x] for x in index_new.entries.keys()
-                        if x in index_old.entries.keys() and index_new[x].crc32_ != index_old[x].crc32_],
+                       if x in index_old.entries.keys() and index_new[x].crc32_ != index_old[x].crc32_],
                        key=lambda x: x.name)
 
     with open(out_dir / f'diff-{path_old.stem}-{path_new.stem}.txt', 'w') as out_file:
@@ -125,9 +125,9 @@ def load_files(path: Path, namelist: Optional[Path] = None) -> Index:
 
     print(f'Indexing {path}...')
     path_len = len(str(path))
-    for root, _, files in walk(path):
+    for root, _, files in os.walk(path):
         for file in files:
-            subpath = Path(root[path_len:].lstrip(sep))
+            subpath = Path(root[path_len:].lstrip(os.sep))
             fullpath = path / subpath / file
 
             if fullpath.suffix in ('.pack', '.pack2'):
@@ -160,10 +160,10 @@ def dump_index(index: Index, name: str, dir_: str) -> None:
     """
 
     print('Dumping index...')
-    makedirs(dir_, exist_ok=True)
+    os.makedirs(dir_, exist_ok=True)
     file_path = Path(dir_, name)
     with file_path.open('w') as out_file:
-        for entry in sorted(index, key=lambda x: x.name):
+        for entry in index:
             out_file.write(
                 f'{entry.name if entry.name else "NONE"};{entry.name_hash};{entry.crc32_};{entry.path};{entry.subpath}\n')
 
