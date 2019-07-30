@@ -1,5 +1,6 @@
 import operator
 import re
+from argparse import ArgumentParser
 from pathlib import Path
 from typing import List, Set, Dict
 from os import makedirs
@@ -18,9 +19,9 @@ from DbgPack.hash import crc64
 # then update it with the new names
 
 
-known_exts = ('DDS TTF TXT adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 cnk4 cnk5 crc crt cso cur dat db dds '
-              'def dir dll dma dme dmv dsk dx11efb dx11rsb dx11ssb eco efb exe fsb fxd fxo gfx gnf i64 ini jpg lst lua mrn '
-              'pak pem playerstudio png prsb psd pssb tga thm tome ttf txt vnfo wav xlsx xml xrsb xssb zone').split()
+known_exts = ('adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 cnk4 cnk5 crc crt cso cur dat db dds def dir dll '
+              'dma dme dmv dsk dx11efb dx11rsb dx11ssb eco efb exe fsb fxd fxo gfx gnf i64 ini jpg lst lua mrn pak '
+              'pem playerstudio png prsb psd pssb tga thm tome ttf txt vnfo wav xlsx xml xrsb xssb zone').split()
 
 
 def read_cstring(data: bytes) -> bytes:
@@ -36,6 +37,8 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
     """
 
     :param paths: List of paths to pack files to scrape
+    :param namelist:
+    :param limit_files: Limit scraping to known file formats
     :return: List of scraped names
     """
 
@@ -44,15 +47,10 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
 
     log_path = Path('log-out.txt')
 
-    # with log_path.open('a') as log_file:
-
     for path in paths:
         print(f'Scraping {path.name}...')
         am = AssetManager([str(path)], namelist=namelist)
         for a in am:
-
-            # log_file.write(f'\n### Searching in "{a.name}" : {a.name_hash:#018}...\n')
-
             data = a.data
             # If no name, check file header. If no match, skip this file
             if a.length > 0 and limit_files:
@@ -94,7 +92,6 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
             mo = file_pattern.findall(data)
             if mo:
                 for m in mo:
-                    # log_file.write('- "' + m[0].decode('utf-8') + '"\n')
                     if b'<gender>' in m[0]:
                         found_names.append(m[0].replace(b'<gender>', b'Male'))
                         found_names.append(m[0].replace(b'<gender>', b'Female'))
