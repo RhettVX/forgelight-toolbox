@@ -135,13 +135,18 @@ def write_names(names: Dict[int, str], path: Path, out_dir: Path = Path('.')) ->
 
 
 if __name__ == '__main__':
-    root = Path(r'C:\Users\Rhett\Desktop\forgelight-toolbox\Backups\07-25-19-LIVE\Resources\Assets')
-    data_names = scrape_packs([root / 'data_x64_0.pack2'], limit_files=False)
-    # write_names(data_names, Path('scraped.txt'))
-    all_names = scrape_packs(list(root.glob('*.pack2')))
-    write_names({**all_names, **data_names}, Path('scraped-more.txt'))
+    parser = ArgumentParser()
+    sub_parsers = parser.add_subparsers(dest='command')
 
-    print(len(data_names))
-    print(len(all_names))
+    sub_scrape = sub_parsers.add_parser('scrape')
+    sub_scrape.add_argument('dir', help='Directory containing pack2s')
+    sub_scrape.add_argument('-o', '--output', help='File to dump scraped names')
 
-    pass
+    args = parser.parse_args()
+    if args.command == 'scrape':
+        dir_path = Path(args.dir)
+        out_path = Path(args.output if args.output else 'scraped.txt')
+
+        data_names = scrape_packs([dir_path / 'data_x64_0.pack2'], limit_files=False)
+        all_names = scrape_packs(list(dir_path.glob('*.pack2')))
+        write_names({**all_names, **data_names}, Path(out_path))
