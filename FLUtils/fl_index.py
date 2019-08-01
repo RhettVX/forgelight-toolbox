@@ -174,6 +174,7 @@ def dump_index(index: Index, name: str, dir_: str) -> None:
 if __name__ == '__main__':
     parser = ArgumentParser()
     sub_parsers = parser.add_subparsers(dest='command')
+    sub_parsers.required = True
 
     parser.add_argument('-n', '--namelist', help='path to external namelist')
 
