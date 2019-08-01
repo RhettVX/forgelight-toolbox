@@ -45,8 +45,6 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
     names = {}
     file_pattern = re.compile(bytes(r'([><\w-]+\.(' + r'|'.join(known_exts) + r'))', 'utf-8'))
 
-    log_path = Path('log-out.txt')
-
     for path in paths:
         print(f'Scraping {path.name}...')
         am = AssetManager([str(path)], namelist=namelist)
@@ -55,25 +53,23 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
             # If no name, check file header. If no match, skip this file
             if a.length > 0 and limit_files:
                 if data[:1] == b'#':  # flatfile
-                    print('In a flatfile')
+                    pass
                 elif data[:14] == b'<ActorRuntime>':  # adr
-                    print('In adr')
                     mo = re.search(b'<Base fileName="([\\w-]+)_LOD0\\.dme"', data, re.IGNORECASE)
                     if mo:
                         name = mo[1]+b'.adr'
                         names[crc64(name)] = name.decode('utf-8')
                 elif data[:10] == b'<ActorSet>':  # agr
-                    print('in agr')
+                    pass
                 elif data[:5] == b'<?xml':  # xml
-                    print('in xml')
+                    pass
                 elif data[:12] == b'*TEXTUREPART':  # eco
-                    print('in eco')
+                    pass
                 elif data[:4] == b'DMAT':  # dma
-                    print('In dma')
+                    pass
                 elif data[:4] == b'DMOD':  # dme
-                    print('in dme')
+                    pass
                 elif data[:4] == b'FSB5':  # fsb
-                    print('in fsb')
                     header_size = unpack('<I', data[12:16])[0]
                     pos = 64+header_size
                     name = read_cstring(data[pos:])+b'.fsb'
@@ -81,7 +77,6 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
                     names[crc64(name)] = name.decode('utf-8')
                     continue
                 elif data[:3] == b'CFX':  # gfx
-                    print('in gfx')
                     data = decompress(data[8:])
 
                 else:
@@ -137,6 +132,7 @@ def write_names(names: Dict[int, str], path: Path, out_dir: Path = Path('.')) ->
 if __name__ == '__main__':
     parser = ArgumentParser()
     sub_parsers = parser.add_subparsers(dest='command')
+    sub_parsers.required = True
 
     sub_scrape = sub_parsers.add_parser('scrape')
     sub_scrape.add_argument('dir', help='Directory containing pack2s')
