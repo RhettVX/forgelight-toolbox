@@ -1,22 +1,13 @@
-import operator
-import re
+from re import search, compile, IGNORECASE
 from argparse import ArgumentParser
-from pathlib import Path
-from typing import List, Set, Dict
 from os import makedirs
-from os.path import splitext
-from zlib import decompress
+from pathlib import Path
 from struct import unpack
+from typing import List, Dict
+from zlib import decompress
 
 from DbgPack import AssetManager
 from DbgPack.hash import crc64
-
-# Here is a rough draft of how this is gonna work
-# load data.pack2
-# Scan every file in the data.pack2
-# output new names
-# backup current namelist
-# then update it with the new names
 
 
 known_exts = ('adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 cnk4 cnk5 crc crt cso cur dat db dds def dir dll '
@@ -33,21 +24,19 @@ def read_cstring(data: bytes) -> bytes:
         chars.append(c)
 
 
-def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True) -> Dict[int, str]:
+def scrape_packs(paths: List[Path], limit_files=True) -> Dict[int, str]:
     """
 
     :param paths: List of paths to pack files to scrape
-    :param namelist:
     :param limit_files: Limit scraping to known file formats
     :return: List of scraped names
     """
-
     names = {}
-    file_pattern = re.compile(bytes(r'([><\w-]+\.(' + r'|'.join(known_exts) + r'))', 'utf-8'))
+    file_pattern = compile(bytes(r'([><\w-]+\.(' + r'|'.join(known_exts) + r'))', 'utf-8'))
 
     for path in paths:
         print(f'Scraping {path.name}...')
-        am = AssetManager([str(path)], namelist=namelist)
+        am = AssetManager([str(path)])
         for a in am:
             data = a.data
             # If no name, check file header. If no match, skip this file
@@ -55,9 +44,9 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
                 if data[:1] == b'#':  # flatfile
                     pass
                 elif data[:14] == b'<ActorRuntime>':  # adr
-                    mo = re.search(b'<Base fileName="([\\w-]+)_LOD0\\.dme"', data, re.IGNORECASE)
+                    mo = search(b'<Base fileName="([\\w-]+)_LOD0\\.dme"', data, IGNORECASE)
                     if mo:
-                        name = mo[1]+b'.adr'
+                        name = mo[1] + b'.adr'
                         names[crc64(name)] = name.decode('utf-8')
                 elif data[:10] == b'<ActorSet>':  # agr
                     pass
@@ -71,8 +60,8 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
                     pass
                 elif data[:4] == b'FSB5':  # fsb
                     header_size = unpack('<I', data[12:16])[0]
-                    pos = 64+header_size
-                    name = read_cstring(data[pos:])+b'.fsb'
+                    pos = 64 + header_size
+                    name = read_cstring(data[pos:]) + b'.fsb'
 
                     names[crc64(name)] = name.decode('utf-8')
                     continue
@@ -106,14 +95,14 @@ def scrape_packs(paths: List[Path], namelist: List[str] = None, limit_files=True
     return names
 
 
-# TODO
-def merge_namelists(path1: Path, path2: Path) -> List[str]:
-    """
-
-    :param path1:
-    :param path2:
-    """
-    pass
+# # TODO
+# def merge_namelists(path1: Path, path2: Path) -> List[str]:
+#     """
+#
+#     :param path1:
+#     :param path2:
+#     """
+#     pass
 
 
 def write_names(names: Dict[int, str], path: Path, out_dir: Path = Path('.')) -> None:
@@ -126,7 +115,7 @@ def write_names(names: Dict[int, str], path: Path, out_dir: Path = Path('.')) ->
 
     makedirs(out_dir, exist_ok=True)
     with path.open('w') as out_file:
-        out_file.writelines([x+'\n' for x in sorted(names.values())])
+        out_file.writelines([x + '\n' for x in sorted(names.values())])
 
 
 if __name__ == '__main__':
@@ -138,6 +127,11 @@ if __name__ == '__main__':
     sub_scrape.add_argument('dir', help='Directory containing pack2s')
     sub_scrape.add_argument('-o', '--output', help='File to dump scraped names')
 
+    sub_merge = sub_parsers.add_parser('merge')
+    sub_merge.add_argument('file1')
+    sub_merge.add_argument('file2')
+    sub_merge.add_argument('-o', '--output', help='File to dump merged namelists')
+
     args = parser.parse_args()
     if args.command == 'scrape':
         dir_path = Path(args.dir)
@@ -146,3 +140,9 @@ if __name__ == '__main__':
         data_names = scrape_packs([dir_path / 'data_x64_0.pack2'], limit_files=False)
         all_names = scrape_packs(list(dir_path.glob('*.pack2')))
         write_names({**all_names, **data_names}, Path(out_path))
+
+    # elif args.command == 'merge':
+    #     # TODO
+    #     file1_path = Path(args.file1)
+    #     file2_path = Path(args.file2)
+    #     pass
