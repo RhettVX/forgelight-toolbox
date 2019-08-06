@@ -127,26 +127,26 @@ if __name__ == '__main__':
 
     sub_scrape = sub_parsers.add_parser('scrape')
     sub_scrape.add_argument('dir', help='Directory containing pack2s')
-    sub_scrape.add_argument('-o', '--output', help='File to dump scraped names')
+    sub_scrape.add_argument('-o', '--output', default='scraped.txt',
+                            help='File to dump scraped names')
 
     sub_merge = sub_parsers.add_parser('merge')
     sub_merge.add_argument('file1')
     sub_merge.add_argument('file2')
-    sub_merge.add_argument('-o', '--output', help='File to dump merged namelists')
+    sub_merge.add_argument('-o', '--output', default='merged.txt',
+                           help='File to dump merged namelists')
 
     args = parser.parse_args()
     if args.command == 'scrape':
         dir_path = Path(args.dir)
-        out_path = Path(args.output if args.output else 'scraped.txt')
 
         data_names = scrape_packs([dir_path / 'data_x64_0.pack2'], limit_files=False)
         all_names = scrape_packs(list(dir_path.glob('*.pack2')))
-        write_names({**all_names, **data_names}, Path(out_path))
+        write_names({**all_names, **data_names}, Path(args.output))
 
     elif args.command == 'merge':
         file1_path = Path(args.file1)
         file2_path = Path(args.file2)
-        out_path = Path(args.output if args.output else 'merged.txt')
 
         merged_names = merge_namelists(file1_path, file2_path)
-        out_path.write_text('\n'.join(merged_names))
+        Path(args.output).write_text('\n'.join(merged_names))

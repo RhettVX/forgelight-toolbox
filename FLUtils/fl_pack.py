@@ -1,14 +1,15 @@
 from argparse import ArgumentParser
 from os import makedirs
 from os.path import splitext, basename, join
+from pathlib import Path
 
-from DbgPack import AssetManager
+from DbgPack import AssetManager, Asset2
 
 
 # TODO: Method to pack a dir into a .pack
 
 
-def unpack_pack(am: AssetManager, dir_: str) -> None:
+def unpack_pack(am: AssetManager, dir_: Path) -> None:
     """
     Unpacks a '.pack|.pack2' file used by the Forgelight Engine
 
@@ -19,48 +20,47 @@ def unpack_pack(am: AssetManager, dir_: str) -> None:
 
     for pack in am.packs:
         print(f'Unpacking {pack.path}...')
-        pack_name = splitext(basename(pack.path))[0]
 
-        makedirs(join(dir_, pack_name), exist_ok=True)
+        makedirs(dir_ / pack.name, exist_ok=True)
 
         for asset in pack.assets.values():
-            name = asset.name if asset.name else f'{asset.name_hash:#018x}.bin'
-            with open(join(dir_, pack_name, name), 'wb') as out_file:
-                out_file.write(asset.data)
+
+            if isinstance(asset, Asset2):
+                name = asset.name if asset.name else f'{asset.name_hash:#018x}.bin'
+            else:
+                name = asset.name
+
+            (dir_ / pack.name / name).write_bytes(asset.data)
 
     print('Done\n')
 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Unpacks a \'.pack|.pack2\' file used by the Forgelight Engine')
+    sub_parsers = parser.add_subparsers(dest='command')
+    sub_parsers.required = True
 
-    # Optional args
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument('-u', '--unpack', action='store_true',
-                      help='unpack provided files')
-    mode.add_argument('-p', '--pack', action='store_true',
-                      help='pack the provided files')
-
-    parser.add_argument('-p1', '--pack1', action='store_true',
-                        help='use pack1 (.pack) format for packing. default: pack2 (.pack2)')
-    parser.add_argument('-n', '--namelist',
-                        help='path to external namelist')
-
-    # Positional args
-    parser.add_argument('file', nargs='+',
-                        help='files or folders to unpack or pack')
+    subcmd_unpack = sub_parsers.add_parser('unpack')
+    subcmd_unpack.add_argument('path', nargs='+', help='pack files or directory to unpack')
+    subcmd_unpack.add_argument('-n', '--namelist', help='path to external namelist')
+    subcmd_unpack.add_argument('-o', '--outdir', default='Unpacked',
+                               help='directory to dump assets')
 
     # Handle the args
     args = parser.parse_args()
-    if args.pack:
-        # TODO: Add packing method
-        raise NotImplementedError
-    else:  # Unpack packs
+    if args.command == 'unpack':
         namelist_ = []
+        namelist_path = Path(args.namelist) if args.namelist else None
 
-        if args.namelist:
-            with open(args.namelist, 'r') as in_file:
-                namelist_ = [line.strip() for line in in_file]
+        if namelist_path:
+            namelist_ = namelist_path.read_text().strip().split('\n')
 
-        am_ = AssetManager(args.file, namelist_)
-        unpack_pack(am_, 'Unpacked')
+        pack_files = []
+        for path in [Path(p) for p in args.path]:
+            if path.is_file():
+                pack_files.append(path)
+            else:
+                pack_files.extend(path.glob('*.pack*'))
+
+        am_ = AssetManager(pack_files, namelist_)
+        unpack_pack(am_, Path(args.outdir))

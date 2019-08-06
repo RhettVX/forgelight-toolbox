@@ -177,21 +177,22 @@ if __name__ == '__main__':
     subcmd_index = sub_parsers.add_parser('index')
     subcmd_index.add_argument('root', nargs='+', help='path of root directory to dump index of')
     subcmd_index.add_argument('-n', '--namelist', help='path to external namelist')
+    subcmd_index.add_argument('-o', '--outdir', default='Game Indices',
+                              help='directory to dump indices')
 
     subcmd_diff = sub_parsers.add_parser('diff')
     subcmd_diff.add_argument('index1', help='Path to older index')
     subcmd_diff.add_argument('index2', help='Path to newer index')
+    subcmd_diff.add_argument('-o', '--outdir', default='Diff Reports',
+                             help='directory to dump diffs')
 
     args = parser.parse_args()
     if args.command == 'index':
         for path_ in args.root:
             dir_path = Path(path_)
-            if args.namelist:
-                namelist_path = Path(args.namelist)
-            else:
-                namelist_path = None
+            namelist_path = Path(args.namelist) if args.namelist else None
 
-            dump_index(load_files(dir_path, namelist_path), dir_path.name + '.txt', 'Game Indices')
+            dump_index(load_files(dir_path, namelist_path), dir_path.name + '.txt', args.outdir)
 
     elif args.command == 'diff':
-        compare_dumps(Path(args.index1), Path(args.index2), Path('Diff Reports'))
+        compare_dumps(Path(args.index1), Path(args.index2), Path(args.outdir))
