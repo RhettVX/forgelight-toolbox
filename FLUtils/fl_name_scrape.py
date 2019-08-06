@@ -93,7 +93,6 @@ def scrape_packs(paths: List[Path], limit_files=True) -> Dict[int, str]:
     return names
 
 
-# TODO
 def merge_namelists(path1: Path, path2: Path) -> List[str]:
     """
     :param path1:
