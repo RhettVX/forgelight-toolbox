@@ -1,7 +1,7 @@
 atomicwrites==1.3.0
 attrs==19.1.0
 colorama==0.4.1
--e git+https://github.com/RhettVX/dbg-pack.git@09a33a45c80f4bf14c17ca340dce4e4fa4eab70e#egg=DbgPack
+-e git+https://github.com/RhettVX/dbg-pack.git@0ea7992fdc4958431d80f4b744c4b4f03090267d#egg=DbgPack
 importlib-metadata==0.17
 more-itertools==7.0.0
 packaging==19.0

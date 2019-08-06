@@ -18,7 +18,6 @@ known_exts = ('adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 cnk4 cnk5 crc
 def read_cstring(data: bytes) -> bytes:
     chars = []
     for c in data:
-        # print(c)
         if c == 0x0:
             return bytes(chars)
         chars.append(c)
@@ -26,7 +25,6 @@ def read_cstring(data: bytes) -> bytes:
 
 def scrape_packs(paths: List[Path], limit_files=True) -> Dict[int, str]:
     """
-
     :param paths: List of paths to pack files to scrape
     :param limit_files: Limit scraping to known file formats
     :return: List of scraped names
@@ -36,11 +34,11 @@ def scrape_packs(paths: List[Path], limit_files=True) -> Dict[int, str]:
 
     for path in paths:
         print(f'Scraping {path.name}...')
-        am = AssetManager([str(path)])
+        am = AssetManager([path])
         for a in am:
             data = a.data
             # If no name, check file header. If no match, skip this file
-            if a.length > 0 and limit_files:
+            if a.size > 0 and limit_files:
                 if data[:1] == b'#':  # flatfile
                     pass
                 elif data[:14] == b'<ActorRuntime>':  # adr
@@ -95,19 +93,24 @@ def scrape_packs(paths: List[Path], limit_files=True) -> Dict[int, str]:
     return names
 
 
-# # TODO
-# def merge_namelists(path1: Path, path2: Path) -> List[str]:
-#     """
-#
-#     :param path1:
-#     :param path2:
-#     """
-#     pass
+# TODO
+def merge_namelists(path1: Path, path2: Path) -> List[str]:
+    """
+    :param path1:
+    :param path2:
+    """
+
+    print(f'Merging "{path1}" and "{path2}"')
+
+    nameset1 = set(path1.read_text().strip().split('\n'))
+    nameset2 = set(path2.read_text().strip().split('\n'))
+    out_set = list(nameset1.union(nameset2))
+
+    return sorted(out_set)
 
 
 def write_names(names: Dict[int, str], path: Path, out_dir: Path = Path('.')) -> None:
     """
-
     :param names:
     :param path:
     :param out_dir:
@@ -141,8 +144,10 @@ if __name__ == '__main__':
         all_names = scrape_packs(list(dir_path.glob('*.pack2')))
         write_names({**all_names, **data_names}, Path(out_path))
 
-    # elif args.command == 'merge':
-    #     # TODO
-    #     file1_path = Path(args.file1)
-    #     file2_path = Path(args.file2)
-    #     pass
+    elif args.command == 'merge':
+        file1_path = Path(args.file1)
+        file2_path = Path(args.file2)
+        out_path = Path(args.output if args.output else 'merged.txt')
+
+        merged_names = merge_namelists(file1_path, file2_path)
+        out_path.write_text('\n'.join(merged_names))
