@@ -22,7 +22,6 @@ def unpack_pack(am: AssetManager, dir_: Path) -> None:
         print(f'Unpacking {pack.path}...')
 
         makedirs(dir_ / pack.name, exist_ok=True)
-
         for asset in pack.assets.values():
 
             if isinstance(asset, Asset2):
@@ -62,5 +61,6 @@ if __name__ == '__main__':
             else:
                 pack_files.extend(path.glob('*.pack*'))
 
+        print('Loading packs...')
         am_ = AssetManager(pack_files, namelist_)
         unpack_pack(am_, Path(args.outdir))
