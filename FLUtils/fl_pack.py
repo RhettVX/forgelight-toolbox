@@ -1,12 +1,8 @@
 from argparse import ArgumentParser
 from os import makedirs
-from os.path import splitext, basename, join
 from pathlib import Path
 
 from DbgPack import AssetManager, Asset2
-
-
-# TODO: Method to pack a dir into a .pack
 
 
 def unpack_pack(am: AssetManager, dir_: Path) -> None:
@@ -34,6 +30,20 @@ def unpack_pack(am: AssetManager, dir_: Path) -> None:
     print('Done\n')
 
 
+def pack_pack2(am: AssetManager, name: str,  dir_: Path) -> None:
+    """
+
+    :param am: Asset manager to pack from
+    :param name: Name of file to pack to
+    :param dir_: Path to dump packed files
+    """
+
+    print(f'Packing to {name} as Pack2...')
+    makedirs(dir_, exist_ok=True)
+    am.export_pack2(name, dir_)
+    print('Done\n')
+
+
 if __name__ == '__main__':
     parser = ArgumentParser(description='Unpacks a \'.pack|.pack2\' file used by the Forgelight Engine')
     sub_parsers = parser.add_subparsers(dest='command')
@@ -44,6 +54,13 @@ if __name__ == '__main__':
     subcmd_unpack.add_argument('-n', '--namelist', help='path to external namelist')
     subcmd_unpack.add_argument('-o', '--outdir', default='Unpacked',
                                help='directory to dump assets')
+
+    subcmd_pack = sub_parsers.add_parser('pack')
+    subcmd_pack.add_argument('path', nargs='+', help='pack files or folders to repack')
+    subcmd_pack.add_argument('-n', '--name', default='assets_x64_0.pack2',
+                             help='pack file name')
+    subcmd_pack.add_argument('-o', '--outdir', default='Packed',
+                             help='directory to save repacked file')
 
     # Handle the args
     args = parser.parse_args()
@@ -64,3 +81,8 @@ if __name__ == '__main__':
         print('Loading packs...')
         am_ = AssetManager(pack_files, namelist_)
         unpack_pack(am_, Path(args.outdir))
+
+    elif args.command == 'pack':
+        print('Loading packs...')
+        am_ = AssetManager([Path(p) for p in args.path])
+        pack_pack2(am_, args.name, Path(args.outdir))
