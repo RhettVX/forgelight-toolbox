@@ -10,11 +10,10 @@ from DbgPack.hash import crc64
 
 
 # TODO: Load in old indices with the newest namelist
-# TODO: Pack everything into the index class
 # TODO: Handle identical file names properly
 
 
-@dataclass()
+@dataclass
 class IndexEntry:
     name: str = field(default='')
     name_hash: str = field(default=None)
@@ -90,7 +89,7 @@ def compare_dumps(path_old: Path, path_new: Path, out_dir: Path) -> None:
                        if x in index_old.entries.keys() and index_new[x].crc32_ != index_old[x].crc32_],
                        key=lambda x: x.name)
 
-    with open(out_dir / f'diff-{path_old.stem}-{path_new.stem}.txt', 'w') as out_file:
+    with Path(out_dir, f'diff-{path_old.stem}-{path_new.stem}.txt').open('w') as out_file:
         out_file.write(f'Diff report:\n"{path_old}"\nand\n"{path_new}"')
 
         out_file.write(f'\n\n\n{"###[ ADDED ]":#<80}')
@@ -108,20 +107,20 @@ def compare_dumps(path_old: Path, path_new: Path, out_dir: Path) -> None:
     print('Done!')
 
 
-def load_files(path: Path, namelist: Optional[Path] = None) -> Index:
+def load_files(path: Path, namelist_path: Optional[Path] = None) -> Index:
     """
 
     :param path: Path of root dir to index
-    :param namelist: Path to external namelist
+    :param namelist_path: Path to external namelist
     :return: Index
     """
     index = Index()
     packs: List[Tuple] = []
     namelist_ = []
 
-    if namelist:
+    if namelist_path:
         print('Loading namelist')
-        namelist_ = [line.strip() for line in namelist.read_text().split('\n')]
+        namelist_ = [line.strip() for line in namelist_path.read_text().split('\n')]
 
     print(f'Indexing {path}...')
     path_len = len(str(path))
@@ -140,10 +139,10 @@ def load_files(path: Path, namelist: Optional[Path] = None) -> Index:
     if packs:
         print('Indexing packs...')
 
-        am = AssetManager([str(Path(*p)) for p in packs], namelist=namelist_)
+        am = AssetManager([Path(*p) for p in packs], namelist=namelist_)
         for a in am:
             e = IndexEntry(name=a.name, name_hash=a.name_hash, crc32_=a.crc32,
-                           path=Path(a.path[:path_len]), subpath=Path(a.path[path_len:]))
+                           path=Path(str(a.path)[:path_len]), subpath=Path(str(a.path)[path_len:]))
             index.add(e)
 
     print('Done\n')
@@ -170,25 +169,30 @@ def dump_index(index: Index, name: str, dir_: str) -> None:
     print('Done\n')
 
 
-# fl_index -n namelist --index[ -n root [root..]] --diff file1 file2
 if __name__ == '__main__':
     parser = ArgumentParser()
     sub_parsers = parser.add_subparsers(dest='command')
-
-    parser.add_argument('-n', '--namelist', help='path to external namelist')
+    sub_parsers.required = True
 
     subcmd_index = sub_parsers.add_parser('index')
     subcmd_index.add_argument('root', nargs='+', help='path of root directory to dump index of')
+    subcmd_index.add_argument('-n', '--namelist', help='path to external namelist')
+    subcmd_index.add_argument('-o', '--outdir', default='Game Indices',
+                              help='directory to dump indices')
 
     subcmd_diff = sub_parsers.add_parser('diff')
     subcmd_diff.add_argument('index1', help='Path to older index')
     subcmd_diff.add_argument('index2', help='Path to newer index')
+    subcmd_diff.add_argument('-o', '--outdir', default='Diff Reports',
+                             help='directory to dump diffs')
 
     args = parser.parse_args()
     if args.command == 'index':
         for path_ in args.root:
-            file_path = Path(path_)
-            dump_index(load_files(file_path, Path(args.namelist)), file_path.name + '.txt', 'Game Indices')
+            dir_path = Path(path_)
+            namelist_path = Path(args.namelist) if args.namelist else None
+
+            dump_index(load_files(dir_path, namelist_path), dir_path.name + '.txt', args.outdir)
 
     elif args.command == 'diff':
-        compare_dumps(Path(args.index1), Path(args.index2), Path('Diff Reports'))
+        compare_dumps(Path(args.index1), Path(args.index2), Path(args.outdir))
