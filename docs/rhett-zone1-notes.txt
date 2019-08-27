@@ -1,0 +1,33 @@
+### .zone [ZONE]
+### using 'Tutorial.zone'
+
+
+(Keep an eye out for geo ids)
+
+
+-- [head] : Little Endian
+
+> 0x00
+ZONE		: char[4]				- Magic
+01 00 00 00	: uint32	: 1			- Version
+
+44 00 00 00	: uint32	: 68		- ?
+D9 0B 00 00	: uint32	: 3033		- ?
+FF 15 00 00	: uint32	: 5631		- ?
+03 16 00 00	: uint32	: 5635		- ?
+3B 3A 01 00	: uint32	: 80443		- ?
+06 76 01 00	: uint32	: 95750		- ?
+
+40 00 00 00	: uint32	: 64		- QuadsPerTile
+00 00 80 42 : float32	: 64		- TileSize
+
+00 00 00 3D : ?			: ?			- ?
+
+41 00 00 00 : uint32	: 65		- VertsPerTile ?
+08 00 00 00 : uint32	: 8			- TilesPerChunk
+F8 FF FF FF	: int32		: -8		- StartX
+F8 FF FF FF : int32		: -8		- StartY
+10 00 00 00 : uint32	: 16		- ChunksX
+10 00 00 00	: uint32	: 16		- ChunksY
+0C 00 00 00 : uint32	: 12		- EcoCount
+
