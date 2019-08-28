@@ -25,7 +25,7 @@ def unpack_pack(am: AssetManager, dir_: Path) -> None:
             else:
                 name = asset.name
 
-            (dir_ / pack.name / name).write_bytes(asset.data)
+            (dir_ / pack.name / name).write_bytes(asset.get_data())
 
     print('Done\n')
 
@@ -55,6 +55,7 @@ if __name__ == '__main__':
     subcmd_unpack.add_argument('-o', '--outdir', default='Unpacked',
                                help='directory to dump assets')
 
+    # Add option to pack raw
     subcmd_pack = sub_parsers.add_parser('pack')
     subcmd_pack.add_argument('path', nargs='+', help='pack files or folders to repack')
     subcmd_pack.add_argument('-n', '--name', default='assets_x64_0.pack2',

@@ -36,7 +36,7 @@ def scrape_packs(paths: List[Path], limit_files=True) -> Dict[int, str]:
         print(f'Scraping {path.name}...')
         am = AssetManager([path])
         for a in am:
-            data = a.data
+            data = a.get_data()
             # If no name, check file header. If no match, skip this file
             if a.size > 0 and limit_files:
                 if data[:1] == b'#':  # flatfile
