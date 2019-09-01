@@ -2,6 +2,11 @@
 ### using 'Tutorial.zone'
 
 
+Structure Overview:
+head
+eco[EcoCount]
+
+
 (Keep an eye out for geo ids)
 
 
@@ -31,3 +36,11 @@ F8 FF FF FF : int32		: -8		- StartY
 10 00 00 00	: uint32	: 16		- ChunksY
 0C 00 00 00 : uint32	: 12		- EcoCount
 
+
+-- [eco] : Little Endian
+
+> 0x48
+00 00 00 00						: uint32	: 0		- ?
+Indar_dirt_packdark 00			: ztstring	:		- Name
+Indar_dirt_packdark_cnx.dds 00	: ztstring	:		- ColorNxMap
+Indar_dirt_packdark_sbny.dds 00	: ztstring	:		- SpecNyMap
