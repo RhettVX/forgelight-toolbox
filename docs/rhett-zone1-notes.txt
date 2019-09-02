@@ -44,3 +44,5 @@ F8 FF FF FF : int32		: -8		- StartY
 Indar_dirt_packdark 00			: ztstring	:		- Name
 Indar_dirt_packdark_cnx.dds 00	: ztstring	:		- ColorNxMap
 Indar_dirt_packdark_sbny.dds 00	: ztstring	:		- SpecNyMap
+0E 00 00 00                     : uint32    : 14    - DetailRepeat
+
