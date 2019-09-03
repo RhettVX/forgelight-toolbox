@@ -40,6 +40,9 @@ Little Endian
 > 0xE8300
 F3 62 01 0D 88 DB 26 00				- Name Hash (Name is UPPERCASE)
 00 94 02 00 00 00 00 00 : 168960	- Asset Offset
-97 01 00 00 00 00 00 00	: 407		- Size of data
+97 01 00 00 00 00 00 00	: 407		- Size of stored data
 01 00 00 00	: 1						- IsZipped (10: Unzipped, 01: Zipped)
 99 DA 49 98 : 2554976921			- Crc32
+
+data_length should refer to stored data size,
+while real_length should refer to the real size

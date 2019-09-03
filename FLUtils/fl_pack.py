@@ -40,7 +40,7 @@ def pack_pack2(am: AssetManager, name: str,  dir_: Path) -> None:
 
     print(f'Packing to {name} as Pack2...')
     makedirs(dir_, exist_ok=True)
-    am.export_pack2(name, dir_)
+    am.export_pack2(name, dir_, raw)
     print('Done\n')
 
 
