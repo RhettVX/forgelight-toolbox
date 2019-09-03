@@ -2,6 +2,11 @@
 ### using 'Tutorial.zone'
 
 
+Structure Overview:
+head
+eco[EcoCount]
+
+
 (Keep an eye out for geo ids)
 
 
@@ -19,7 +24,7 @@ FF 15 00 00	: uint32	: 5631		- ?
 06 76 01 00	: uint32	: 95750		- ?
 
 40 00 00 00	: uint32	: 64		- QuadsPerTile
-00 00 80 42 : float32	: 64		- TileSize
+00 00 80 42 : float32	: 64.0		- TileSize
 
 00 00 00 3D : ?			: ?			- ?
 
@@ -31,3 +36,18 @@ F8 FF FF FF : int32		: -8		- StartY
 10 00 00 00	: uint32	: 16		- ChunksY
 0C 00 00 00 : uint32	: 12		- EcoCount
 
+
+-- [eco] : Little Endian
+
+> 0x48
+00 00 00 00						: uint32	: 0			- ?
+Indar_dirt_packdark 00			: ztstring	:			- Name
+Indar_dirt_packdark_cnx.dds 00	: ztstring	:			- ColorNxMap
+Indar_dirt_packdark_sbny.dds 00	: ztstring	:			- SpecBlendNyMap
+0E 00 00 00						: uint32	: 14        - DetailRepeat
+52 44 A4 3F						: float32	: 1.283335	- BlendStrength
+F4 FD D4 3C						: float32	: 0.026000	- SpecMin
+B4 C8 36 3F						: float32	: 0.714000	- SpecMax
+00 00 00 00						: float32	: 0.0		- SpecSmoothnessMin
+EE 7C 1F 3F						: float32	: 0.623		- SpecSmoothnessMax
+dirtlightbrown 00				: ztstring	:			- PhysicsMaterial
