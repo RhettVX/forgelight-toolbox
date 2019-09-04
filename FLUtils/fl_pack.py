@@ -30,7 +30,7 @@ def unpack_pack(am: AssetManager, dir_: Path) -> None:
     print('Done\n')
 
 
-def pack_pack2(am: AssetManager, name: str,  dir_: Path) -> None:
+def pack_pack2(am: AssetManager, name: str, dir_: Path, raw=False) -> None:
     """
 
     :param am: Asset manager to pack from
@@ -55,13 +55,14 @@ if __name__ == '__main__':
     subcmd_unpack.add_argument('-o', '--outdir', default='Unpacked',
                                help='directory to dump assets')
 
-    # Add option to pack raw
     subcmd_pack = sub_parsers.add_parser('pack')
     subcmd_pack.add_argument('path', nargs='+', help='pack files or folders to repack')
     subcmd_pack.add_argument('-n', '--name', default='assets_x64_0.pack2',
                              help='pack file name')
     subcmd_pack.add_argument('-o', '--outdir', default='Packed',
                              help='directory to save repacked file')
+    subcmd_pack.add_argument('-f', '--fast', action='store_true',
+                             help='do not unzip unchanged assets')
 
     # Handle the args
     args = parser.parse_args()
@@ -86,4 +87,4 @@ if __name__ == '__main__':
     elif args.command == 'pack':
         print('Loading packs...')
         am_ = AssetManager([Path(p) for p in args.path])
-        pack_pack2(am_, args.name, Path(args.outdir))
+        pack_pack2(am_, args.name, Path(args.outdir), args.fast)
