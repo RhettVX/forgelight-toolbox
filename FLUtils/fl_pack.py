@@ -25,12 +25,12 @@ def unpack_pack(am: AssetManager, dir_: Path) -> None:
             else:
                 name = asset.name
 
-            (dir_ / pack.name / name).write_bytes(asset.data)
+            (dir_ / pack.name / name).write_bytes(asset.get_data())
 
     print('Done\n')
 
 
-def pack_pack2(am: AssetManager, name: str,  dir_: Path) -> None:
+def pack_pack2(am: AssetManager, name: str, dir_: Path, raw=False) -> None:
     """
 
     :param am: Asset manager to pack from
@@ -40,7 +40,7 @@ def pack_pack2(am: AssetManager, name: str,  dir_: Path) -> None:
 
     print(f'Packing to {name} as Pack2...')
     makedirs(dir_, exist_ok=True)
-    am.export_pack2(name, dir_)
+    am.export_pack2(name, dir_, raw)
     print('Done\n')
 
 
@@ -61,6 +61,8 @@ if __name__ == '__main__':
                              help='pack file name')
     subcmd_pack.add_argument('-o', '--outdir', default='Packed',
                              help='directory to save repacked file')
+    subcmd_pack.add_argument('-f', '--fast', action='store_true',
+                             help='do not unzip unchanged assets')
 
     # Handle the args
     args = parser.parse_args()
@@ -85,4 +87,4 @@ if __name__ == '__main__':
     elif args.command == 'pack':
         print('Loading packs...')
         am_ = AssetManager([Path(p) for p in args.path])
-        pack_pack2(am_, args.name, Path(args.outdir))
+        pack_pack2(am_, args.name, Path(args.outdir), args.fast)

@@ -15,6 +15,7 @@ known_exts = ('adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 cnk4 cnk5 crc
               'pem playerstudio png prsb psd pssb tga thm tome ttf txt vnfo wav xlsx xml xrsb xssb zone').split()
 
 
+# TODO: Replace this with the improved version from zone-parse
 def read_cstring(data: bytes) -> bytes:
     chars = []
     for c in data:
@@ -36,9 +37,9 @@ def scrape_packs(paths: List[Path], limit_files=True) -> Dict[int, str]:
         print(f'Scraping {path.name}...')
         am = AssetManager([path])
         for a in am:
-            data = a.data
+            data = a.get_data()
             # If no name, check file header. If no match, skip this file
-            if a.size > 0 and limit_files:
+            if a.data_length > 0 and limit_files:
                 if data[:1] == b'#':  # flatfile
                     pass
                 elif data[:14] == b'<ActorRuntime>':  # adr
