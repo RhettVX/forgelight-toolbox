@@ -74,3 +74,14 @@ flora_rock02 00	: ztstring	:			- Flora
 
 28 76 97 FF		: int32		: -6851032				- Tint1
 26 00 00 00		: uint32	: 38 (Should be 60?)	- Tint1Unk
+
+-- Flora : 0xBD9
+22 00 00 00		: uint32	: 34	- FloraCount
+
+# Flora(? Needs a better name)
+flora_grass_tuft01 00						: ztstring	:		- Name
+default.dds 00								: ztstring	:		- Texture?
+Indar_Flora_Radial_GrassTuft01_Lod0.dme 00	: ztstring	:		- Model
+01											: bool		: true	- ?
+2F DD 04 3F									: float32	: 0.519	- ?
+F4 FD D4 3D									: float32	: 0.104	- ?
