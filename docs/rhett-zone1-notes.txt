@@ -3,20 +3,17 @@
 
 
 Structure Overview:
-head
-eco[EcoCount]
-
+TODO
 
 (Keep an eye out for geo ids)
 
 
--- [head] : Little Endian
-
-> 0x00
+-- [Header] : Little Endian : 0x00
 ZONE		: char[4]				- Magic
 01 00 00 00	: uint32	: 1			- Version
 
-44 00 00 00	: uint32	: 68		- ?
+# Offsets
+44 00 00 00	: uint32	: 68		- EcosOffset
 D9 0B 00 00	: uint32	: 3033		- ?
 FF 15 00 00	: uint32	: 5631		- ?
 03 16 00 00	: uint32	: 5635		- ?
@@ -34,14 +31,15 @@ F8 FF FF FF	: int32		: -8		- StartX
 F8 FF FF FF : int32		: -8		- StartY
 10 00 00 00 : uint32	: 16		- ChunksX
 10 00 00 00	: uint32	: 16		- ChunksY
+
+
+-- [Ecos] : Little Endian : 0x44
 0C 00 00 00 : uint32	: 12		- EcoCount
 
+# Eco[EcoCount]
+00 00 00 00	: uint32	: 0			- EcoIndex
 
--- [eco] : Little Endian
-
-# TexturePart : 0x48
-00 00 00 00						: uint32	: 0			- ?
-
+# TexturePart
 Indar_dirt_packdark 00			: ztstring	:			- Name
 Indar_dirt_packdark_cnx.dds 00	: ztstring	:			- ColorNxMap
 Indar_dirt_packdark_sbny.dds 00	: ztstring	:			- SpecBlendNyMap
@@ -53,10 +51,10 @@ B4 C8 36 3F						: float32	: 0.714 	- SpecMax
 EE 7C 1F 3F						: float32	: 0.623		- SpecSmoothnessMax
 dirtlightbrown 00				: ztstring	:			- PhysicsMaterial
 
-# FloraPart : 0xC0
+# FloraPart
 04 00 00 00		: uint32	: 4			- LayerCount
 
--- Layer[LayerCount]
+# Layer[LayerCount]
 00 80 09 45		: float32	: 2200.0	- Density
 CD CC 4C 3E		: float32	: 0.2		- MinScale
 66 66 66 3F		: float32	: 0.9		- MaxScale
@@ -68,20 +66,38 @@ CD CC 4C 3E		: float32	: 0.2		- MinScale
 flora_rock02 00	: ztstring	:			- Flora
 02 00 00 00		: uint32	: 2			- TintCount
 
-# Tints
-31 69 93 FF		: int32		: -7116495				- Tint0
-3F 00 00 00		: uint32	: 63 (Should be 100?)	- Tint0Unk
+# Tints[TintCount]
+31 69 93 FF		: uint8[4]	: 49, 105, 147, 255     - ColorRGBA
+3F 00 00 00		: uint32	: 63 (Should be 100?)	- Percentage
 
-28 76 97 FF		: int32		: -6851032				- Tint1
-26 00 00 00		: uint32	: 38 (Should be 60?)	- Tint1Unk
 
--- Flora : 0xBD9
+-- [Floras] : Little Endian : 0xBD9
 22 00 00 00		: uint32	: 34	- FloraCount
 
-# Flora(? Needs a better name)
+# Flora[FloraCount]
 flora_grass_tuft01 00						: ztstring	:		- Name
 default.dds 00								: ztstring	:		- Texture?
 Indar_Flora_Radial_GrassTuft01_Lod0.dme 00	: ztstring	:		- Model
 01											: bool		: true	- ?
 2F DD 04 3F									: float32	: 0.519	- ?
 F4 FD D4 3D									: float32	: 0.104	- ?
+
+
+-- [InvisWalls] : Little Endian : 0x15FF
+00 00 00 00		: uint32	: 0		- InvisWallCount (None here I guess)
+\\ 	//Invis walls : c = UINT32
+\\  r.Get(&c); 
+\\  for (i = 0; i < c; i++){
+\\  	r.Get(&c);
+\\  	r.SeekCur(12*c); //Possibly three floats
+\\  }
+
+-- RuntimeObjects : 0x1603
+63 00 00 00		: uint32	: 99	- ObjectCount
+
+# Objects[ObjectCount]
+Indar_Props_HighlandRock_03.adr 00	: ztstring	:		- FileName
+00 40 A6 45							: float32	: 5320	- RenderDistance ?
+1B 00 00 00							: uint32	: 27	- InstanceCount
+
+# Instances[InstanceCount]
