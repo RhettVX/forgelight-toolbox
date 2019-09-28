@@ -3,16 +3,17 @@ from argparse import ArgumentParser
 from os import makedirs
 from pathlib import Path
 from struct import unpack
-from typing import List, Dict
+from typing import List, Dict, Set
 from zlib import decompress
 
 from DbgPack import AssetManager
 from DbgPack.hash import crc64
 
-
 known_exts = ('adr agr ags apb apx bat bin cdt cnk0 cnk1 cnk2 cnk3 cnk4 cnk5 crc crt cso cur dat db dds def dir dll '
               'dma dme dmv dsk dx11efb dx11rsb dx11ssb eco efb exe fsb fxd fxo gfx gnf i64 ini jpg lst lua mrn pak '
               'pem playerstudio png prsb psd pssb tga thm tome ttf txt vnfo wav xlsx xml xrsb xssb zone').split()
+
+file_pattern = compile(bytes(r'([><\w-]+\.(' + r'|'.join(known_exts) + r'))', 'utf-8'))
 
 
 # TODO: Replace this with the improved version from zone-parse
@@ -31,7 +32,6 @@ def scrape_packs(paths: List[Path], limit_files=True) -> Dict[int, str]:
     :return: List of scraped names
     """
     names = {}
-    file_pattern = compile(bytes(r'([><\w-]+\.(' + r'|'.join(known_exts) + r'))', 'utf-8'))
 
     for path in paths:
         print(f'Scraping {path.name}...')

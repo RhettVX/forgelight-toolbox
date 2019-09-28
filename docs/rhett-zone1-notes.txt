@@ -14,8 +14,8 @@ ZONE		: char[4]				- Magic
 
 # Offsets
 44 00 00 00	: uint32	: 68		- EcosOffset
-D9 0B 00 00	: uint32	: 3033		- ?
-FF 15 00 00	: uint32	: 5631		- ?
+D9 0B 00 00	: uint32	: 3033		- FlorasOffset
+FF 15 00 00	: uint32	: 5631		- InvisWallsOffset
 03 16 00 00	: uint32	: 5635		- ?
 3B 3A 01 00	: uint32	: 80443		- ?
 06 76 01 00	: uint32	: 95750		- ?
@@ -92,7 +92,7 @@ F4 FD D4 3D									: float32	: 0.104	- ?
 \\  	r.SeekCur(12*c); //Possibly three floats
 \\  }
 
--- RuntimeObjects : 0x1603
+-- [RuntimeObjects] : 0x1603
 63 00 00 00		: uint32	: 99	- ObjectCount
 
 # Objects[ObjectCount]
