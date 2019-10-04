@@ -16,16 +16,14 @@ ZONE		: char[4]				- Magic
 44 00 00 00	: uint32	: 68		- EcosOffset
 D9 0B 00 00	: uint32	: 3033		- FlorasOffset
 FF 15 00 00	: uint32	: 5631		- InvisWallsOffset
-03 16 00 00	: uint32	: 5635		- ?
-3B 3A 01 00	: uint32	: 80443		- ?
-06 76 01 00	: uint32	: 95750		- ?
+03 16 00 00	: uint32	: 5635		- ObjectsOffset
+3B 3A 01 00	: uint32	: 80443		- LightsOffset
+06 76 01 00	: uint32	: 95750		- ? Offset
 
 40 00 00 00	: uint32	: 64		- QuadsPerTile
 00 00 80 42 : float32	: 64.0		- TileSize
-
-00 00 00 3D : ?			: ?			- ? (Maybe geo id?)
-
-41 00 00 00 : uint32	: 65		- VertsPerTile ?
+00 00 00 3D : float32	: 0.03125	- TileHeight
+41 00 00 00 : uint32	: 65		- VertsPerTile
 08 00 00 00 : uint32	: 8			- TilesPerChunk
 F8 FF FF FF	: int32		: -8		- StartX
 F8 FF FF FF : int32		: -8		- StartY
@@ -92,12 +90,41 @@ F4 FD D4 3D									: float32	: 0.104	- ?
 \\  	r.SeekCur(12*c); //Possibly three floats
 \\  }
 
--- [RuntimeObjects] : 0x1603
+-- [Objects] : 0x1603
 63 00 00 00		: uint32	: 99	- ObjectCount
 
-# Objects[ObjectCount]
-Indar_Props_HighlandRock_03.adr 00	: ztstring	:		- FileName
-00 40 A6 45							: float32	: 5320	- RenderDistance ?
+# Object[ObjectCount]
+Indar_Props_HighlandRock_03.adr 00	: ztstring	:		- ActorDefinition
+00 40 A6 45							: float32	: 5320	- RenderDistance
 1B 00 00 00							: uint32	: 27	- InstanceCount
 
-# Instances[InstanceCount]
+# Instance[InstanceCount]
+- Translation
+FC F7 EA C3		: float32	: -469.937378	- TranslationX
+45 F9 FF 43		: float32	: 511.947418	- TranslationY
+70 99 FF C3		: float32	: -511.19873	- TranslationZ
+00 00 80 3F		: float32	: 1.0			- ?
+
+- Rotation
+F4 8F 14 C0		: float32	: -2.321286		- RotationX
+00 00 00 00		: float32	: 0.0			- RotationY
+00 00 00 00		: float32	: 0.0			- RotationZ
+00 00 00 00		: float32	: 0.0			- ?
+
+- Scale
+9A 99 99 3F		: float32	: 1.2	    - ScaleX
+4E 15 9C 3F		: float32	: 1.2194    - ScaleY
+14 AE 87 3F		: float32	: 1.06		- ScaleZ
+00 00 80 3F		: float32	: 1.0	    - ?
+
+9C E2 5C 30		: uint32	: 811393692		- Id
+00				: uint8		: 0				- ?
+00 00 80 3F		: float32	: 1				- ?
+
+
+-- [Lights] : 0x13A3B
+8E 00 00 00		: uint32	: 142	- LightCount
+
+# Light[LightCount]
+SpotLight_987214527 00	: ztstring	:	- Name
+blue_ampstationlegs 00	: ztstring	:	- ColorName
