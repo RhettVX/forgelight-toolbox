@@ -126,5 +126,11 @@ F4 8F 14 C0		: float32	: -2.321286		- RotationX
 8E 00 00 00		: uint32	: 142	- LightCount
 
 # Light[LightCount]
-SpotLight_987214527 00	: ztstring	:	- Name
-blue_ampstationlegs 00	: ztstring	:	- ColorName
+SpotLight_987214527 00	: ztstring	:	    - Name
+blue_ampstationlegs 00	: ztstring	:	    - ColorName
+02                      : uint8     : 2     - Type
+00 00 00 00             : float32   : 0     - ?
+C4 09 AB C3             : float32   :       - PositionX
+D2 66 F0 43             : float32   :       - PositionY
+47 1B CC C3             : float32   :       - PositionZ
+00 00 80 3F             : float32   :       - Position?
