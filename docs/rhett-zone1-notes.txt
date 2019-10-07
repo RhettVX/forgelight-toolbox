@@ -99,23 +99,23 @@ Indar_Props_HighlandRock_03.adr 00	: ztstring	:		- ActorDefinition
 1B 00 00 00							: uint32	: 27	- InstanceCount
 
 # Instance[InstanceCount]
-- Translation
-FC F7 EA C3		: float32	: -469.937378	- TranslationX
-45 F9 FF 43		: float32	: 511.947418	- TranslationY
-70 99 FF C3		: float32	: -511.19873	- TranslationZ
-00 00 80 3F		: float32	: 1.0			- ?
+- Position
+FC F7 EA C3		: float32	: -469.937378	- PositionX
+45 F9 FF 43		: float32	: 511.947418	- PositionY
+70 99 FF C3		: float32	: -511.19873	- PositionZ
+00 00 80 3F		: float32	: 1.0			- PositionW
 
 - Rotation
 F4 8F 14 C0		: float32	: -2.321286		- RotationX
 00 00 00 00		: float32	: 0.0			- RotationY
 00 00 00 00		: float32	: 0.0			- RotationZ
-00 00 00 00		: float32	: 0.0			- ?
+00 00 00 00		: float32	: 0.0			- RotationW
 
 - Scale
 9A 99 99 3F		: float32	: 1.2	    - ScaleX
 4E 15 9C 3F		: float32	: 1.2194    - ScaleY
 14 AE 87 3F		: float32	: 1.06		- ScaleZ
-00 00 80 3F		: float32	: 1.0	    - ?
+00 00 80 3F		: float32	: 1.0	    - ScaleW
 
 9C E2 5C 30		: uint32	: 811393692		- Id
 00				: uint8		: 0				- ?
@@ -130,7 +130,32 @@ SpotLight_987214527 00	: ztstring	:	    - Name
 blue_ampstationlegs 00	: ztstring	:	    - ColorName
 02                      : uint8     : 2     - Type
 00 00 00 00             : float32   : 0     - ?
-C4 09 AB C3             : float32   :       - PositionX
-D2 66 F0 43             : float32   :       - PositionY
-47 1B CC C3             : float32   :       - PositionZ
-00 00 80 3F             : float32   :       - Position?
+
+- Position
+C4 09 AB C3		: float32   : -342.076294	- PositionX
+D2 66 F0 43		: float32   : 480.803284	- PositionY
+47 1B CC C3		: float32   : -408.213104   - PositionZ
+00 00 80 3F		: float32   : 1.0			- PositionW
+
+- Rotation
+D8 66 DF 3E		: float32	: 0.436332	- RotationX
+E0 45 71 3F		: float32	: 0.942472	- RotationY
+E2 52 23 B4		: float32	: -0.0 odd	- RotationZ
+00 00 80 3F		: float32	: 1.0		- RotationW
+
+00 00 70 41		: float32	: 15.0					- Range
+69 DC DE 3E		: float32	: 0.435275				- InnerRange
+FF 2B DF FF		: uint8[4]	: 255, 43, 223, 255		- Color
+01 00 00 00 00	: byte[5]	: 1, 0, 0, 0, 0			- ?
+
+- Unk Vector
+D8 0F 49 3F		: float32	:				- ?
+02 89 FB 3F		: float32	:				- ?
+54 E3 25 40		: float32	:				- ?
+00 00 00 00		: float32	:				- ?
+
+00				: ztstring	:				- ?
+BF B2 D7 3A		: uint32	: 987214527		- Id
+
+-- [Unknowns] : 0x17606
+00 00 00 00		:	:		- ?
