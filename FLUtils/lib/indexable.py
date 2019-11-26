@@ -1,7 +1,16 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Dict
 
-from .indexable_type_enum import IndexableType
+
+class IndexableType(Enum):
+    GENERAL = 0
+    FILE = 1
+    ASSET = 2
+    STRING = 3
+    ITEM = 4
+    VEHICLE = 5
+    TINT = 6
 
 
 @dataclass()
