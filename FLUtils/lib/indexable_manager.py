@@ -5,7 +5,7 @@ from .indexable import Indexable
 
 
 @dataclass()
-class IndexableManager:
+class IndexableManager:  # Should use a separate manager for each game version
     indexables: Dict[int, Indexable] = field(default_factory=dict)
 
     def add(self, item: Indexable):
@@ -16,3 +16,6 @@ class IndexableManager:
 
     def __getitem__(self, item: int):
         return self.indexables[item]
+
+    def __len__(self):
+        return len(self.indexables)
