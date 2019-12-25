@@ -1,58 +1,55 @@
 import os
 from argparse import ArgumentParser
-from binascii import crc32
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Tuple
 
 from DbgPack import AssetManager
-from DbgPack.hash import crc64
 
 
 # TODO: Load in old indices with the newest namelist
 # TODO: Handle identical file names properly
 
 
-@dataclass
-class IndexEntry:
-    name: str = field(default='')
-    name_hash: str = field(default=None)
-    crc32_: Optional[int] = field(default=None)
-    path: Path = field(default=None)
-    subpath: Optional[Path] = field(default_factory=Path)
+# @dataclass
+# class IndexEntry:
+#     name: str = field(default='')
+#     name_hash: str = field(default=None)
+#     crc32_: Optional[int] = field(default=None)
+#     path: Path = field(default=None)
+#     subpath: Optional[Path] = field(default_factory=Path)
+#
+#     def __post_init__(self):
+#         assert self.name or self.name_hash, 'name or name_hash is required'
+#         assert self.path, 'these arguments are required'
+#
+#         if self.name == 'NONE':
+#             self.name = ''
+#
+#         if not self.name_hash and self.name:
+#             self.name_hash = crc64(self.name)
+#
+#         # If subpath is a file, then we are probably in a pack
+#         if not self.crc32_ and self.name and self.path and (self.path / self.subpath).is_dir():
+#             fullpath = self.path / self.subpath / self.name
+#
+#             if fullpath.stat().st_size > 0:
+#                 self.crc32_ = crc32(fullpath.read_bytes())
+#             else:
+#                 self.crc32_ = 0
 
-    def __post_init__(self):
-        assert self.name or self.name_hash, 'name or name_hash is required'
-        assert self.path, 'these arguments are required'
 
-        if self.name == 'NONE':
-            self.name = ''
-
-        if not self.name_hash and self.name:
-            self.name_hash = crc64(self.name)
-
-        # If subpath is a file, then we are probably in a pack
-        if not self.crc32_ and self.name and self.path and (self.path / self.subpath).is_dir():
-            fullpath = self.path / self.subpath / self.name
-
-            if fullpath.stat().st_size > 0:
-                self.crc32_ = crc32(fullpath.read_bytes())
-            else:
-                self.crc32_ = 0
-
-
-@dataclass
-class Index:
-    entries: Dict[int, IndexEntry] = field(default_factory=dict)
-
-    def add(self, item):
-        self.entries[item.name_hash] = item
-
-    def __iter__(self):
-        return iter(self.entries.values())
-
-    def __getitem__(self, item):
-        return self.entries[item]
+# @dataclass
+# class Index:
+#     entries: Dict[int, IndexEntry] = field(default_factory=dict)
+#
+#     def add(self, item):
+#         self.entries[item.name_hash] = item
+#
+#     def __iter__(self):
+#         return iter(self.entries.values())
+#
+#     def __getitem__(self, item):
+#         return self.entries[item]
 
 
 def compare_dumps(path_old: Path, path_new: Path, out_dir: Path) -> None:
