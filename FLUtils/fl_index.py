@@ -2,13 +2,16 @@ import os
 from argparse import ArgumentParser
 from pathlib import Path
 from typing import List, Optional, Tuple
+from binascii import crc32
 
 from DbgPack import AssetManager
+from FLUtils.lib.indexable_manager import IndexableManager, Indexable
 
 
 # TODO: Load in old indices with the newest namelist
 # TODO: Handle identical file names properly
 
+pass  # FIXME: just here to separate the comment folding
 
 # @dataclass
 # class IndexEntry:
@@ -52,144 +55,169 @@ from DbgPack import AssetManager
 #         return self.entries[item]
 
 
-def compare_dumps(path_old: Path, path_new: Path, out_dir: Path) -> None:
-    """
-    Compare to index dumps and create a difference report
-
-    :param path_old: Path to older index dump
-    :param path_new: Path to newer index dump
-    :param out_dir: Name of folder to output report to
-    :return: None
-    """
-
-    print('Creating diff report...')
-
-    os.makedirs(out_dir, exist_ok=True)
-
-    # Load indices
-    index_old = Index()
-    for line in [l.strip() for l in path_old.read_text().split('\n')]:
-        if line:
-            index_old.add(IndexEntry(*line.split(';')))
-
-    index_new = Index()
-    for line in [l.strip() for l in path_new.read_text().split('\n')]:
-        if line:
-            index_new.add(IndexEntry(*line.split(';')))
-
-    # Identify file changes
-    files_new = sorted([index_new[x] for x in index_new.entries.keys() if x not in index_old.entries.keys()],
-                       key=lambda x: x.name)
-    files_del = sorted([index_old[x] for x in index_old.entries.keys() if x not in index_new.entries.keys()],
-                       key=lambda x: x.name)
-    files_mod = sorted([index_new[x] for x in index_new.entries.keys()
-                       if x in index_old.entries.keys() and index_new[x].crc32_ != index_old[x].crc32_],
-                       key=lambda x: x.name)
-
-    with Path(out_dir, f'diff-{path_old.stem}-{path_new.stem}.txt').open('w') as out_file:
-        out_file.write(f'Diff report:\n"{path_old}"\nand\n"{path_new}"')
-
-        out_file.write(f'\n\n\n{"###[ ADDED ]":#<80}')
-        out_file.writelines([f'\n+ "{x.name if x.name else "NONE"}" : {int(x.name_hash):#018x} : "{x.subpath}"'
-                             for x in files_new])
-
-        out_file.write(f'\n\n\n{"###[ DELETED ]":#<80}')
-        out_file.writelines([f'\n- "{x.name if x.name else "NONE"}" : {int(x.name_hash):#018x} : "{x.subpath}"'
-                             for x in files_del])
-
-        out_file.write(f'\n\n\n{"###[ CHANGED ]":#<80}')
-        out_file.writelines([f'\n! "{x.name if x.name else "NONE"}" : {int(x.name_hash):#018x} : "{x.subpath}"'
-                             for x in files_mod])
-
-    print('Done!')
-
-
-def load_files(path: Path, namelist_path: Optional[Path] = None) -> Index:
+def create_index(path: Path, namelist_path: Optional[Path] = None) -> IndexableManager:
     """
 
     :param path: Path of root dir to index
     :param namelist_path: Path to external namelist
-    :return: Index
+    :return: IndexableManager
     """
-    index = Index()
-    packs: List[Tuple] = []
-    namelist_ = []
 
-    if namelist_path:
-        print('Loading namelist')
-        namelist_ = [line.strip() for line in namelist_path.read_text().split('\n')]
+    indexable_manager = IndexableManager()
 
-    print(f'Indexing {path}...')
-    path_len = len(str(path))
+    print(f'Indexing \'{path}\'...')
+    # Lets index just loose files first
     for root, _, files in os.walk(path):
         for file in files:
-            subpath = Path(root[path_len:].lstrip(os.sep))
-            fullpath = path / subpath / file
-
-            if fullpath.suffix in ('.pack', '.pack2'):
-                packs.append((path, subpath, file))
-
+            ext = os.path.splitext(file)[1]
+            if ext == '.pack' or ext == '.pack2':
+                pass
             else:
-                e = IndexEntry(name=file, path=path, subpath=subpath)
-                index.add(e)
+                subpath = Path(root[len(str(path)):].lstrip(os.sep))  # HACK
+                print(subpath / file)
+                data_hash = crc32(Path(root, file).read_bytes())
+                print(hex(data_hash))
+                # i = Indexable(unique_id=hash(subpath / file))
 
-    if packs:
-        print('Indexing packs...')
+# XXX
+# def compare_dumps(path_old: Path, path_new: Path, out_dir: Path) -> None:
+#     """
+#     Compare to index dumps and create a difference report
+#
+#     :param path_old: Path to older index dump
+#     :param path_new: Path to newer index dump
+#     :param out_dir: Name of folder to output report to
+#     :return: None
+#     """
+#
+#     print('Creating diff report...')
+#
+#     os.makedirs(out_dir, exist_ok=True)
+#
+#     # Load indices
+#     index_old = Index()
+#     for line in [l.strip() for l in path_old.read_text().split('\n')]:
+#         if line:
+#             index_old.add(IndexEntry(*line.split(';')))
+#
+#     index_new = Index()
+#     for line in [l.strip() for l in path_new.read_text().split('\n')]:
+#         if line:
+#             index_new.add(IndexEntry(*line.split(';')))
+#
+#     # Identify file changes
+#     files_new = sorted([index_new[x] for x in index_new.entries.keys() if x not in index_old.entries.keys()],
+#                        key=lambda x: x.name)
+#     files_del = sorted([index_old[x] for x in index_old.entries.keys() if x not in index_new.entries.keys()],
+#                        key=lambda x: x.name)
+#     files_mod = sorted([index_new[x] for x in index_new.entries.keys()
+#                        if x in index_old.entries.keys() and index_new[x].crc32_ != index_old[x].crc32_],
+#                        key=lambda x: x.name)
+#
+#     with Path(out_dir, f'diff-{path_old.stem}-{path_new.stem}.txt').open('w') as out_file:
+#         out_file.write(f'Diff report:\n"{path_old}"\nand\n"{path_new}"')
+#
+#         out_file.write(f'\n\n\n{"###[ ADDED ]":#<80}')
+#         out_file.writelines([f'\n+ "{x.name if x.name else "NONE"}" : {int(x.name_hash):#018x} : "{x.subpath}"'
+#                              for x in files_new])
+#
+#         out_file.write(f'\n\n\n{"###[ DELETED ]":#<80}')
+#         out_file.writelines([f'\n- "{x.name if x.name else "NONE"}" : {int(x.name_hash):#018x} : "{x.subpath}"'
+#                              for x in files_del])
+#
+#         out_file.write(f'\n\n\n{"###[ CHANGED ]":#<80}')
+#         out_file.writelines([f'\n! "{x.name if x.name else "NONE"}" : {int(x.name_hash):#018x} : "{x.subpath}"'
+#                              for x in files_mod])
+#
+#     print('Done!')
 
-        am = AssetManager([Path(*p) for p in packs], namelist=namelist_)
-        for a in am:
-            e = IndexEntry(name=a.name, name_hash=a.name_hash, crc32_=a.crc32,
-                           path=Path(str(a.path)[:path_len]), subpath=Path(str(a.path)[path_len:]))
-            index.add(e)
+# XXX
+# def load_files(path: Path, namelist_path: Optional[Path] = None) -> Index:
+#     """
+#
+#     :param path: Path of root dir to index
+#     :param namelist_path: Path to external namelist
+#     :return: Index
+#     """
+#     index = Index()
+#     packs: List[Tuple] = []
+#     namelist_ = []
+#
+#     if namelist_path:
+#         print('Loading namelist')
+#         namelist_ = [line.strip() for line in namelist_path.read_text().split('\n')]
+#
+#     print(f'Indexing {path}...')
+#     path_len = len(str(path))
+#     for root, _, files in os.walk(path):
+#         for file in files:
+#             subpath = Path(root[path_len:].lstrip(os.sep))
+#             fullpath = path / subpath / file
+#
+#             if fullpath.suffix in ('.pack', '.pack2'):
+#                 packs.append((path, subpath, file))
+#
+#             else:
+#                 e = IndexEntry(name=file, path=path, subpath=subpath)
+#                 index.add(e)
+#
+#     if packs:
+#         print('Indexing packs...')
+#
+#         am = AssetManager([Path(*p) for p in packs], namelist=namelist_)
+#         for a in am:
+#             e = IndexEntry(name=a.name, name_hash=a.name_hash, crc32_=a.crc32,
+#                            path=Path(str(a.path)[:path_len]), subpath=Path(str(a.path)[path_len:]))
+#             index.add(e)
+#
+#     print('Done\n')
+#     return index
 
-    print('Done\n')
-    return index
+# XXX
+# def dump_index(index: Index, name: str, dir_: str) -> None:
+#     """
+#
+#     :param index: List of index entries to dump
+#     :param name: Name of file to dump index to
+#     :param dir_: Directory to store index dump in
+#     :return: None
+#     """
+#
+#     print('Dumping index...')
+#     os.makedirs(dir_, exist_ok=True)
+#     file_path = Path(dir_, name)
+#     with file_path.open('w') as out_file:
+#         for entry in index:
+#             out_file.write(
+#                 f'{entry.name if entry.name else "NONE"};{entry.name_hash};{entry.crc32_};{entry.path};{entry.subpath}\n')
+#
+#     print('Done\n')
 
 
-def dump_index(index: Index, name: str, dir_: str) -> None:
-    """
-
-    :param index: List of index entries to dump
-    :param name: Name of file to dump index to
-    :param dir_: Directory to store index dump in
-    :return: None
-    """
-
-    print('Dumping index...')
-    os.makedirs(dir_, exist_ok=True)
-    file_path = Path(dir_, name)
-    with file_path.open('w') as out_file:
-        for entry in index:
-            out_file.write(
-                f'{entry.name if entry.name else "NONE"};{entry.name_hash};{entry.crc32_};{entry.path};{entry.subpath}\n')
-
-    print('Done\n')
-
-
-if __name__ == '__main__':
-    parser = ArgumentParser()
-    sub_parsers = parser.add_subparsers(dest='command')
-    sub_parsers.required = True
-
-    subcmd_index = sub_parsers.add_parser('index')
-    subcmd_index.add_argument('root', nargs='+', help='path of root directory to dump index of')
-    subcmd_index.add_argument('-n', '--namelist', help='path to external namelist')
-    subcmd_index.add_argument('-o', '--outdir', default='Game Indices',
-                              help='directory to dump indices')
-
-    subcmd_diff = sub_parsers.add_parser('diff')
-    subcmd_diff.add_argument('index1', help='Path to older index')
-    subcmd_diff.add_argument('index2', help='Path to newer index')
-    subcmd_diff.add_argument('-o', '--outdir', default='Diff Reports',
-                             help='directory to dump diffs')
-
-    args = parser.parse_args()
-    if args.command == 'index':
-        for path_ in args.root:
-            dir_path = Path(path_)
-            namelist_path = Path(args.namelist) if args.namelist else None
-
-            dump_index(load_files(dir_path, namelist_path), dir_path.name + '.txt', args.outdir)
-
-    elif args.command == 'diff':
-        compare_dumps(Path(args.index1), Path(args.index2), Path(args.outdir))
+# if __name__ == '__main__':
+#     parser = ArgumentParser()
+#     sub_parsers = parser.add_subparsers(dest='command')
+#     sub_parsers.required = True
+#
+#     subcmd_index = sub_parsers.add_parser('index')
+#     subcmd_index.add_argument('root', nargs='+', help='path of root directory to dump index of')
+#     subcmd_index.add_argument('-n', '--namelist', help='path to external namelist')
+#     subcmd_index.add_argument('-o', '--outdir', default='Game Indices',
+#                               help='directory to dump indices')
+#
+#     subcmd_diff = sub_parsers.add_parser('diff')
+#     subcmd_diff.add_argument('index1', help='Path to older index')
+#     subcmd_diff.add_argument('index2', help='Path to newer index')
+#     subcmd_diff.add_argument('-o', '--outdir', default='Diff Reports',
+#                              help='directory to dump diffs')
+#
+#     args = parser.parse_args()
+#     if args.command == 'index':
+#         for path_ in args.root:
+#             dir_path = Path(path_)
+#             namelist_path = Path(args.namelist) if args.namelist else None
+#
+#             dump_index(load_files(dir_path, namelist_path), dir_path.name + '.txt', args.outdir)
+#
+#     elif args.command == 'diff':
+#         compare_dumps(Path(args.index1), Path(args.index2), Path(args.outdir))

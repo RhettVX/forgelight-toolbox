@@ -3,6 +3,8 @@ from typing import Dict
 
 from .indexable import Indexable
 
+# TODO: Implement this
+
 
 @dataclass()
 class IndexableManager:  # Should use a separate manager for each game version
